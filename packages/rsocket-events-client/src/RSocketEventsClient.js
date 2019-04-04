@@ -4,26 +4,35 @@
  * @flow
  */
 
-'use strict';
+"use strict";
 
-import type {DuplexConnection, Frame} from 'rsocket-types';
-import type {ConnectionStatus} from "rsocket-types/src";
+import type { ConnectionStatus, DuplexConnection, Frame, ISubject } from "rsocket-types";
+import EventsClient from "./EventsClient";
+import { Flowable } from "rsocket-flowable";
+import type { Connection } from "./Connect";
+import { CONNECTION_STATUS } from "rsocket-types";
 
 /**
  * A WebSocket transport client for use in browser environments.
  */
 export default class RSocketEventsClient implements DuplexConnection {
-  _eventsClient: EventsClient;
-  constructor(options){
+  _eventsClient: EventsClient | null;
+  _receivers: Set<any>;
+  _address: string;
+  connection: Connection;
+  _statusSubscribers: Set<ISubject<ConnectionStatus>>;
+  constructor(options: { eventClient?: Object; address: string; address: string }) {
     this._receivers = new Set();
-    this._eventsClient = options.eventClient || new EventsClient();
+    this._eventsClient = options.eventClient || new EventsClient({ eventType: "defaultEventsListener" });
     this._address = options.address;
+    this._statusSubscribers = new Set();
   }
+
   /**
    * Send a single frame on the connection.
    */
-  sendOne(frame: Frame):void {
-    if( !this.connection ) {
+  sendOne(frame: Frame): void {
+    if ( !this.connection ) {
       return;
     }
     this.connection.send(frame);
@@ -37,11 +46,11 @@ export default class RSocketEventsClient implements DuplexConnection {
    * - Implementations must signal any errors by calling `onError` on the
    *   `receive()` Publisher.
    */
-  send(input: Flowable<Frame>):void {
-    if( !this.connection ) {
+  send(input: Flowable<Frame>): void {
+    if ( !this.connection ) {
       return;
     }
-    input.subscribe(frame => this.connection.send(frame))
+    input.subscribe(frame => this.connection.send(frame));
   }
 
   /**
@@ -55,7 +64,7 @@ export default class RSocketEventsClient implements DuplexConnection {
    * - Implemenations may optionally support multi-cast receivers. Those that do
    *   not should throw if `receive` is called more than once.
    */
-  receive(): Flowable<Frame>{
+  receive(): Flowable<Frame> {
     return new Flowable(subject => {
       subject.onSubscribe({
         cancel: () => {
@@ -63,7 +72,7 @@ export default class RSocketEventsClient implements DuplexConnection {
         },
         request: () => {
           this._receivers.add(subject);
-        },
+        }
       });
     });
   }
@@ -73,8 +82,8 @@ export default class RSocketEventsClient implements DuplexConnection {
    * Publisher.
    */
   close(): void {
-    this._eventsClient.disconnect();
-    this.connection = null;
+    this.connection && typeof this.connection.disconnect === "function" && this.connection.disconnect();
+    this._eventsClient = null;
   }
 
   /**
@@ -82,11 +91,15 @@ export default class RSocketEventsClient implements DuplexConnection {
    * the CLOSED or ERROR state.
    */
   connect(): void {
-    this.connection = this._eventsClient.connect(this._address);
-    this.connection.receive((e) => {
-      const frame = this._readFrame(e.payload);
-      this._receivers.forEach(subscriber => subscriber.onNext(frame));
-    });
+    if (this._eventsClient){
+      this.connection = this._eventsClient.connect(this._address);
+      this.connection.receive((e) => {
+        const frame = e.payload; //this._readFrame(e.payload);
+        this._receivers.forEach(subscriber => subscriber.onNext(frame));
+      });
+    } else {
+      console.log('connection is closed');
+    }
   }
 
   /**
@@ -96,8 +109,19 @@ export default class RSocketEventsClient implements DuplexConnection {
    * Implementations must publish values per the comments on ConnectionStatus.
    */
   connectionStatus(): Flowable<ConnectionStatus> {
-
+    return new Flowable(subscriber => {
+      subscriber.onSubscribe({
+        cancel: () => {
+          this._statusSubscribers.delete(subscriber);
+        },
+        request: () => {
+          this._statusSubscribers.add(subscriber);
+          subscriber.onNext(CONNECTION_STATUS.CONNECTING);
+        },
+      });
+    });
   }
+
 
 }
 

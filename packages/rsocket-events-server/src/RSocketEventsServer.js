@@ -20,7 +20,9 @@
 
 import type {Encoders, TransportServer} from 'rsocket-core';
 import {Flowable} from 'rsocket-flowable';
-import RSocketEventsClient from "../../rsocket-events-client/src";
+import EventsServer from "./EventsServer";
+import type {ConnectionStatus, DuplexConnection, Frame} from 'rsocket-types';
+import RSocketEventsClient from "rsocket-events-client/src";
 
 export type ServerOptions = {|
   host?: string,

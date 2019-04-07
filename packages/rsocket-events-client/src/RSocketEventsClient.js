@@ -21,7 +21,7 @@ export default class RSocketEventsClient implements DuplexConnection {
   _address: string;
   connection: Connection;
   _statusSubscribers: Set<ISubject<ConnectionStatus>>;
-  constructor(options: { eventClient?: Object; address: string; address: string }) {
+  constructor(options: { eventClient?: Object; address: string;}) {
     this._receivers = new Set();
     this._eventsClient = options.eventClient || new EventsClient({ eventType: "defaultEventsListener" });
     this._address = options.address;
@@ -92,6 +92,8 @@ export default class RSocketEventsClient implements DuplexConnection {
    */
   connect(): void {
     if (this._eventsClient){
+      this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
+
       this.connection = this._eventsClient.connect(this._address);
       this.connection.receive((e) => {
         const frame = e.payload; //this._readFrame(e.payload);
@@ -116,12 +118,15 @@ export default class RSocketEventsClient implements DuplexConnection {
         },
         request: () => {
           this._statusSubscribers.add(subscriber);
-          subscriber.onNext(CONNECTION_STATUS.CONNECTING);
+          subscriber.onNext(CONNECTION_STATUS.CONNECTED);
         },
       });
     });
   }
 
-
+  _setConnectionStatus(status: ConnectionStatus): void {
+    this._status = status;
+    this._statusSubscribers.forEach(subscriber => subscriber.onNext(status));
+  }
 }
 

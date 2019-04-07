@@ -10,7 +10,9 @@ export interface Connection {
 }
 
 export interface ConnectOptions {
-  eventType?: string
+  eventType?: string;
+  clientChannelPort?: string;
+  _listeners?: Array<any>;
 }
 
 

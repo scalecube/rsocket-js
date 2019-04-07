@@ -24,7 +24,8 @@
     "tck": "yarn run build && node packages/rsocket-tck/build/index.js \"$@\"",
     "simple-cli": "yarn run build && node packages/rsocket-examples/build/SimpleCli.js \"$@\"",
     "test": "f() { EXIT=0; yarn run typecheck || EXIT=$?; yarn run jest \"$@\" || EXIT=$?; exit $EXIT; }; f",
-    "typecheck": "flow check packages/"
+    "typecheck": "flow check packages/",
+    "start": "http-server -a localhost -p 8080"
   },
   "workspaces": [
     "packages/*"
@@ -56,7 +57,7 @@
     "fbjs-scripts": "^0.7.1",
     "flow-bin": "^0.78.0",
     "glob": "^7.1.1",
-    "jest": "^19.0.2",
+    "jest": "^24.7.1",
     "lerna": "^2.9.0",
     "object-assign": "^4.1.0",
     "prettier": "0.22.0",
@@ -89,5 +90,8 @@
       "<rootDir>/packages/.*/build/haste/",
       "<rootDir>/node_modules/(?!(fbjs/lib/|fbjs-scripts/jest))"
     ]
+  },
+  "dependencies": {
+    "http-server": "^0.11.1"
   }
 }

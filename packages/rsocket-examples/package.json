@@ -3,21 +3,29 @@
   "private": true,
   "description": "RSocket examples",
   "version": "0.0.10",
+  "main": "src/browser.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/rsocket/rsocket-js.git"
+  },
+  "scripts": {
+    "build": "rm -rf bundle && rollup -c"
   },
   "license": "BSD-3-Clause",
   "dependencies": {
     "fbjs": "^0.8.12",
     "rsocket-core": "^0.0.10",
+    "rsocket-events-client": "0.0.10",
+    "rsocket-events-server": "0.0.10",
     "rsocket-flowable": "^0.0.10",
     "rsocket-tcp-server": "^0.0.10",
     "rsocket-types": "^0.0.10",
     "rsocket-websocket-client": "^0.0.10",
     "rsocket-websocket-server": "^0.0.10",
-    "ws": "^5.2.1",
-    "rsocket-events-client": "0.0.10",
-    "rsocket-events-server": "0.0.10"
+    "ws": "^5.2.1"
+  },
+  "devDependencies": {
+    "jest-worker": "^24.6.0",
+    "rollup-plugin-flow": "^1.1.1"
   }
 }

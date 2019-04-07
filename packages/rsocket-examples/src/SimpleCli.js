@@ -38,9 +38,6 @@ import RSocketTcpClient from 'rsocket-tcp-client';
 import yargs from 'yargs';
 import WebSocket from 'ws';
 
-import RSocketEventsServer from 'rsocket-events-server';
-import RSocketEventsClient from 'rsocket-events-client';
-
 const argv = yargs
   .usage('$0 --host <host> --port <port>')
   .options({
@@ -57,7 +54,7 @@ const argv = yargs
     protocol: {
       default: 'tcp',
       describe: 'the protocol.',
-      choices: [/*'ws', 'tcp',*/ 'pm'],
+      choices: ['ws', 'tcp'],
     },
     mode: {
       default: 'client',
@@ -75,7 +72,7 @@ const argv = yargs
       type: 'string',
     },
   })
-  .choices('protocol', [/*'ws', 'tcp', */'pm'])
+  .choices('protocol', ['ws', 'tcp'])
   .help().argv;
 
 const isClient = argv.mode === 'client';
@@ -134,8 +131,6 @@ function getServerTransport(protocol: string, options: ServerOptions) {
       return new RSocketTCPServer({...options});
     case 'ws':
       return new RSocketWebSocketServer({...options});
-    case 'pm':
-      return new RSocketEventsServer({...options});
   }
 }
 
@@ -169,10 +164,6 @@ function getClientTransport(protocol: string, options: ServerOptions) {
           return new WebSocket(url);
         },
       });
-    case 'pm':
-      return new RSocketEventsClient({
-        address : `pm://${options.host}${options.path}${options.port ? ":" + options.port : ""}`
-      })
   }
 }
 

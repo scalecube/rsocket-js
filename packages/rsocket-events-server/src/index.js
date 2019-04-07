@@ -20,5 +20,3 @@
 import RSocketEventsServer from "./RSocketEventsServer";
 
 export default RSocketEventsServer;
-
-export type {ServerOptions} from './RSocketWebSocketServer';

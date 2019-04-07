@@ -4,8 +4,6 @@
 
 import type { Connect, Connection, ConnectOptions } from "./Connect";
 
-const thread = window || global;
-
 export default class EventsClient implements Connect {
   eventType: string;
 
@@ -14,14 +12,15 @@ export default class EventsClient implements Connect {
   }
 
   connect(address: string): Connection {
+    console.log('window', window.postMessage);
     let channel: any = new MessageChannel();
     let listeners = [];
 
-    typeof thread.postMessage === "function" && thread.postMessage(
+    typeof window.postMessage === "function" && window.postMessage(
       new CustomEvent(this.eventType, {
         address,
         type: "open"
-      }), [channel.port2]);
+      }), '*' , [channel.port2]);
 
     const initConnection = (msg: { type: string; payload: any }) => {
       switch ( msg.type ) {
@@ -74,4 +73,7 @@ const newMessage = ({ type, payload }) => ({
   payload
 });
 
-const updateListeners = ({ listeners = [], type, func }) => (type && func &&  Array.isArray(listeners)) ? listeners.push({ type, func }) : listeners;
+const updateListeners = ({ listeners = [], type, func }: { listeners: Array<any>, type: string, func: Function }) => (type && func) ? [...listeners, {
+  type,
+  func
+}] : [...listeners];

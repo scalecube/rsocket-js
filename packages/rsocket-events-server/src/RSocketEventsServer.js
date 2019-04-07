@@ -22,11 +22,11 @@ import type {Encoders, TransportServer} from 'rsocket-core';
 import {Flowable} from 'rsocket-flowable';
 import EventsServer from "./EventsServer";
 import type {ConnectionStatus, DuplexConnection, Frame} from 'rsocket-types';
-import RSocketEventsClient from "rsocket-events-client/src";
+import RSocketEventsClient from "rsocket-events-client";
 
 export type ServerOptions = {|
   host?: string,
-  port: number,
+  port?: number,
   backlog?: number,
   server?: any,
   verifyClient?: Function,
@@ -42,9 +42,12 @@ export type ServerOptions = {|
  * A Events transport server.
  */
 export default class RSocketEventsServer implements TransportServer {
+  _server : any;
+  address : string;
   constructor(options: ServerOptions, encoders?: ?Encoders<*>) {
+    this.address = `pm://${options.host || ''}/${options.path || ''}${options.port ? ":" + options.port : ""}`;
     this._server = new EventsServer({
-      address: `pm://${options.host}${options.path}${options.port ? ":" + options.port : ""}`
+      address: this.address
     });
   }
 
@@ -56,7 +59,7 @@ export default class RSocketEventsServer implements TransportServer {
         },
         request: n => {
           this._server.onConnect((ec)=> {
-            const connection = new RSocketEventsClient({eventClient: ec});
+            const connection = new RSocketEventsClient({eventClient: ec, address: this.address});
             connection.connect();
             subscriber.onNext(connection)
           });

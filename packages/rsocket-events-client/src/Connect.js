@@ -13,6 +13,7 @@ export interface ConnectOptions {
   eventType?: string;
   clientChannelPort?: string;
   _listeners?: Array<any>;
+  confirmConnectionOpenCallback ?: Function
 }
 
 

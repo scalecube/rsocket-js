@@ -18,10 +18,11 @@ const eventClient = class Client implements Connect {
         this.clientChannelPort.postMessage(newMessage({ type: "response", payload: msg }));
       },
       receive: (cb) => {
-        const requestMessage = (e) => {
-          if ( e.type === "request" ) {
-            console.log("request-server", e.payload);
-            cb(e.payload);
+        const requestMessage = (eventMsg) => {
+          const { type, payload } = getMessageData(eventMsg);
+          if ( type === "request" ) {
+            console.log("receive-request", payload);
+            cb(payload);
           }
         };
         this._listeners = updateListeners({ listeners: this._listeners, type: "message", func: requestMessage });
@@ -40,26 +41,25 @@ export default class EventsServer {
   address: string;
   _getEventData: Function;
   _listeners: Array<any>;
-  _handler: Function;
   _onConnection: Function;
 
 
   constructor(option: { eventType?: string; address: string, processEvent?: (e: any) => any }) {
     this.eventType = option.eventType || "defaultEventsListener";
     this.address = option.address;
-    this._getEventData = option.processEvent || (e => e.details);
+    this._getEventData = data => (data.type === this.eventType) ? data.detail : null;
 
-    this._handler = this._handler.bind(this);
     this._listeners = updateListeners({ listeners: this._listeners, type: this.eventType, func: this._handler });
-    typeof addEventListener === "function" && addEventListener(this.eventType, this._handler);
+
+    window.addEventListener("message", this._handler.bind(this));
   }
 
-  _handler(e) {
-    const event = this._getEventData(e);
-    if ( event.address !== this.address && event.type === "open" ) {
+  _handler(ev) {
+    const event = this._getEventData(ev.data);
+    if ( !event || event.address !== this.address || event.type !== "open" ) {
       return;
     }
-    const clientChannelPort = e.ports[0];
+    const clientChannelPort = ev.ports[0];
 
     clientChannelPort.postMessage({ type: "connect" });
 
@@ -79,7 +79,7 @@ export default class EventsServer {
     this._onConnection(new eventClient({ clientChannelPort: clientChannelPort, _listeners: this._listeners }));
   }
 
-  onConnect(cb : Function) {
+  onConnect(cb: Function) {
     this._onConnection = cb;
   }
 }
@@ -90,6 +90,8 @@ const newMessage = ({ type, payload }) => ({
   cid: Date.now() + "-" + Math.random(),
   payload
 });
+
+const getMessageData = (eventMsg) => eventMsg ? eventMsg.data : null;
 
 const updateListeners = ({ listeners = [], type, func }: { listeners: Array<any>, type: string, func: Function }) => (type && func) ? [...listeners, {
   type,

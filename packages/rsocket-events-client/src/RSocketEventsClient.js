@@ -11,6 +11,7 @@ import EventsClient from "./EventsClient";
 import { Flowable } from "rsocket-flowable";
 import type { Connection } from "./Connect";
 import { CONNECTION_STATUS } from "rsocket-types";
+import invariant from "fbjs/lib/invariant";
 
 /**
  * A WebSocket transport client for use in browser environments.
@@ -21,11 +22,17 @@ export default class RSocketEventsClient implements DuplexConnection {
   _address: string;
   connection: Connection;
   _statusSubscribers: Set<ISubject<ConnectionStatus>>;
+  _status: ConnectionStatus;
   constructor(options: { eventClient?: Object; address: string;}) {
     this._receivers = new Set();
-    this._eventsClient = options.eventClient || new EventsClient({ eventType: "defaultEventsListener" });
+    this._eventsClient = options.eventClient || new EventsClient({ eventType: "defaultEventsListener", confirmConnectionOpenCallback: this.confirmConnectionOpenCallback.bind(this) });
     this._address = options.address;
     this._statusSubscribers = new Set();
+    this._status = CONNECTION_STATUS.NOT_CONNECTED;
+  }
+
+  confirmConnectionOpenCallback(){
+    this._setConnectionStatus(CONNECTION_STATUS.CONNECTED);
   }
 
   /**
@@ -82,6 +89,22 @@ export default class RSocketEventsClient implements DuplexConnection {
    * Publisher.
    */
   close(): void {
+    if (this._status.kind === 'CLOSED' || this._status.kind === 'ERROR') {
+      // already closed
+      return;
+    }
+    const status = error ? {error, kind: 'ERROR'} : CONNECTION_STATUS.CLOSED;
+    this._setConnectionStatus(status);
+
+    this._receivers.forEach(subscriber => {
+      if (error) {
+        subscriber.onError(error);
+      } else {
+        subscriber.onComplete();
+      }
+    });
+    this._receivers.clear();
+
     this.connection && typeof this.connection.disconnect === "function" && this.connection.disconnect();
     this._eventsClient = null;
   }
@@ -91,13 +114,21 @@ export default class RSocketEventsClient implements DuplexConnection {
    * the CLOSED or ERROR state.
    */
   connect(): void {
+    invariant(
+      this._status.kind === 'NOT_CONNECTED',
+      'RSocketWebSocketClient: Cannot connect(), a connection is already ' +
+      'established.',
+    );
+    this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
+
+
     if (this._eventsClient){
       this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
       this.connection = this._eventsClient.connect(this._address);
-      this.connection.receive((e) => {
-        const frame = e.payload; //this._readFrame(e.payload);
-        this._receivers.forEach(subscriber => subscriber.onNext(frame));
+      this.connection.receive((payload) => {
+        const frame = payload;
+        frame && this._receivers.forEach(subscriber => subscriber.onNext(frame));
       });
     } else {
       console.log('connection is closed');
@@ -118,7 +149,7 @@ export default class RSocketEventsClient implements DuplexConnection {
         },
         request: () => {
           this._statusSubscribers.add(subscriber);
-          subscriber.onNext(CONNECTION_STATUS.CONNECTED);
+          subscriber.onNext(this._status);
         },
       });
     });

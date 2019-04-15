@@ -9,7 +9,8 @@
     "url": "https://github.com/rsocket/rsocket-js.git"
   },
   "scripts": {
-    "build": "rm -rf bundle && rollup -c"
+    "build:example": "parcel build -o build ./src/browser.js",
+    "watch:example": "parcel ./events.html"
   },
   "license": "BSD-3-Clause",
   "dependencies": {
@@ -25,7 +26,6 @@
     "ws": "^5.2.1"
   },
   "devDependencies": {
-    "jest-worker": "^24.6.0",
     "rollup-plugin-flow": "^1.1.1"
   }
 }

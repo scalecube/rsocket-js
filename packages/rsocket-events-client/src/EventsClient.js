@@ -1,14 +1,17 @@
 /**
- * @flow
+ * @flow env=browser,webworker,webworker
  */
 
-import type { Connect, Connection, ConnectOptions } from "./Connect";
 
-export default class EventsClient implements Connect {
+import { getMessageData, newMessage, updateListeners } from "./utils";
+import type { IEventListener } from "./utils";
+import type { IChannelClient, ChannelOptionsClient, Connection } from "./EventsChannelClient";
+
+export default class EventsClient implements IChannelClient {
   eventType: string;
-  confirmConnectionOpenCallback: Function;
+  confirmConnectionOpenCallback: Function | void;
 
-  constructor(option: ConnectOptions) {
+  constructor(option: ChannelOptionsClient) {
     this.eventType = option.eventType || "defaultEventsListener";
     this.confirmConnectionOpenCallback = option.confirmConnectionOpenCallback;
   }
@@ -16,9 +19,9 @@ export default class EventsClient implements Connect {
   connect(address: string): Connection {
 
     let channel: any = new MessageChannel();
-    let listeners = [];
-
-    window.postMessage({
+    let listeners: IEventListener[];
+    // $FlowFixMe
+    typeof postMessage === "function" && postMessage({
       type: this.eventType,
       detail: {
         address,
@@ -46,7 +49,7 @@ export default class EventsClient implements Connect {
       }
     };
 
-    listeners = updateListeners({ listeners, type: "message", func: initConnection });
+    listeners = updateListeners({ type: "message", func: initConnection });
     channel.port1.addEventListener("message", initConnection);
     channel.port1.start();
 
@@ -75,15 +78,3 @@ export default class EventsClient implements Connect {
   }
 }
 
-const newMessage = ({ type, payload }) => ({
-  type,
-  cid: Date.now() + "-" + Math.random(),
-  payload
-});
-
-const getMessageData = (eventMsg) => eventMsg ? eventMsg.data : null;
-
-const updateListeners = ({ listeners = [], type, func }: { listeners: Array<any>, type: string, func: Function }) => (type && func) ? [...listeners, {
-  type,
-  func
-}] : [...listeners];

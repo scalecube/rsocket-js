@@ -16,39 +16,30 @@
  */
 
 
-'use strict';
+"use strict";
 
-import type {Encoders, TransportServer} from 'rsocket-core';
-import {Flowable} from 'rsocket-flowable';
-import EventsServer from "./EventsServer";
-import type {ConnectionStatus, DuplexConnection, Frame} from 'rsocket-types';
+import { Flowable } from "rsocket-flowable";
 import RSocketEventsClient from "rsocket-events-client";
+import EventsServer from "./EventsServer";
+import type { TransportServer } from "rsocket-core";
+import type { ConnectionStatus, DuplexConnection, Frame } from "rsocket-types";
 
-export type ServerOptions = {|
-  host?: string,
-  port?: number,
-  backlog?: number,
-  server?: any,
-  verifyClient?: Function,
-  handleProtocols?: Function,
-  path?: string,
-  noServer?: boolean,
-  clientTracking?: boolean,
-  perMessageDeflate?: any,
-  maxPayload?: number,
-|};
+export type ServerOptions = {
+  address: string;
+  eventType?: string;
+  processEvent?: (ev: any) => any
+}
 
 /**
  * A Events transport server.
  */
 export default class RSocketEventsServer implements TransportServer {
-  _server : any;
-  address : string;
-  constructor(options: ServerOptions, encoders?: ?Encoders<*>) {
-    this.address = `pm://${options.host || ''}/${options.path || ''}${options.port ? ":" + options.port : ""}`;
-    this._server = new EventsServer({
-      address: this.address
-    });
+  _server: any;
+  address: string;
+
+  constructor(options: ServerOptions) {
+    this.address = options.address;
+    this._server = new EventsServer(options);
   }
 
   start(): Flowable<DuplexConnection> {
@@ -57,16 +48,17 @@ export default class RSocketEventsServer implements TransportServer {
         cancel: () => {
 
         },
-        request: n => {
-          this._server.onConnect((ec)=> {
-            const connection = new RSocketEventsClient({eventClient: ec, address: this.address});
-            connection.connect();
-            subscriber.onNext(connection)
+        request: () => {
+          this._server.onConnect((eventClient) => {
+            const eventClientConnection = new RSocketEventsClient({ eventClient, address: this.address });
+            eventClientConnection.connect();
+            subscriber.onNext(eventClientConnection);
           });
-        },
+        }
       });
     });
   }
+
   stop(): void {
 
   }

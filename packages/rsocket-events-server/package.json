@@ -13,7 +13,6 @@
     "rsocket-core": "^0.0.10",
     "rsocket-flowable": "^0.0.10",
     "rsocket-types": "^0.0.10",
-    "ws": "^2.3.1",
     "rsocket-events-client": "0.0.10"
   }
 }

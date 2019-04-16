@@ -9,7 +9,7 @@
 import type { ConnectionStatus, DuplexConnection, Frame, ISubject } from "rsocket-types";
 import EventsClient from "./EventsClient";
 import { Flowable } from "rsocket-flowable";
-import type { Connection } from "./Connect";
+import type { Connection } from "./EventsChannelClient";
 import { CONNECTION_STATUS } from "rsocket-types";
 import invariant from "fbjs/lib/invariant";
 
@@ -88,7 +88,7 @@ export default class RSocketEventsClient implements DuplexConnection {
    * Close the underlying connection, emitting `onComplete` on the receive()
    * Publisher.
    */
-  close(): void {
+  close(error?: Error): void {
     if (this._status.kind === 'CLOSED' || this._status.kind === 'ERROR') {
       // already closed
       return;
@@ -123,9 +123,10 @@ export default class RSocketEventsClient implements DuplexConnection {
 
 
     if (this._eventsClient){
+      const _eventsClient = this._eventsClient;
       this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
-      this.connection = this._eventsClient.connect(this._address);
+      this.connection = _eventsClient.connect(this._address);
       this.connection.receive((payload) => {
         const frame = payload;
         frame && this._receivers.forEach(subscriber => subscriber.onNext(frame));

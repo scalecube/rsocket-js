@@ -15,7 +15,10 @@
  * @flow
  */
 
-'use strict';
+"use strict";
 
-import RSocketEventsClient from './RSocketEventsClient';
+import RSocketEventsClient from "./RSocketEventsClient";
+
+export * from "./utils";
+
 export default RSocketEventsClient;

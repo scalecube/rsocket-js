@@ -1,5 +1,5 @@
 {
-  "name": "rsocket-js",
+  "name": "@publish_test/rsocket-js",
   "private": true,
   "description": "An implementation of the RSocket protocol: https://github.com/rsocket/rsocket",
   "version": "0.0.1",

@@ -36,8 +36,10 @@ export type ServerOptions = {
 export default class RSocketEventsServer implements TransportServer {
   _server: any;
   address: string;
+  _subscribers: Set<DuplexConnection>;
 
   constructor(options: ServerOptions) {
+    this._subscribers = new Set();
     this.address = options.address;
     this._server = new EventsServer(options);
   }
@@ -46,11 +48,15 @@ export default class RSocketEventsServer implements TransportServer {
     return new Flowable(subscriber => {
       subscriber.onSubscribe({
         cancel: () => {
-
+          if ( !this._server ) {
+            return;
+          }
+          this._server.onStop();
         },
         request: () => {
           this._server.onConnect((eventClient) => {
             const eventClientConnection = new RSocketEventsClient({ eventClient, address: this.address });
+            this._subscribers.add(eventClientConnection);
             eventClientConnection.connect();
             subscriber.onNext(eventClientConnection);
           });
@@ -60,6 +66,10 @@ export default class RSocketEventsServer implements TransportServer {
   }
 
   stop(): void {
-
+    if (!this._subscribers) {
+      return;
+    }
+    this._subscribers.forEach(subscriber => subscriber.close())
+    this._subscribers.clear();
   }
 }

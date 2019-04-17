@@ -13,7 +13,7 @@ export interface Connection {
 
 export interface ChannelOptionsServer {
   clientChannelPort?: string;
-  _listeners?: IEventListener[];
+  listeners?: IEventListener[];
 }
 
 export interface IChannelServer {

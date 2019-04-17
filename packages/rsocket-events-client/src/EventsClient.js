@@ -72,6 +72,7 @@ export default class EventsClient implements IChannelClient {
         channel.port1.addEventListener("message", responseMessage);
       },
       disconnect: () => {
+        console.log('client close');
         channel.port1.postMessage(newMessage({ type: "close", payload: null }));
       }
     });

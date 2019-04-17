@@ -18,6 +18,7 @@ export default class EventsServer {
   _getEventData: Function;
   _listeners: IEventListener[];
   _onConnection: Function;
+  _clientChannelPort: MessagePort | null;
 
   constructor(option: ServerOptions) {
     this.eventType = option.eventType || "defaultEventsListener";
@@ -35,31 +36,38 @@ export default class EventsServer {
       return;
     }
 
-    const clientChannelPort = ev && Array.isArray(ev.ports) ? ev.ports[0] : null;
-
-    if ( !clientChannelPort ) {
+    if ( ev && Array.isArray(ev.ports) ) {
+      this._clientChannelPort = ev.ports[0];
+    } else {
       return;
     }
 
-    clientChannelPort.postMessage({ type: "connect" });
+    this._clientChannelPort.postMessage({ type: "connect" });
 
-    const connectionHandler = (msg) => {
-      switch ( msg.type ) {
+    const connectionHandler = (ev) => {
+      const event = getMessageData(ev);
+      switch ( event.type ) {
         case "close": {
-          clientChannelPort.postMessage({ type: "disconnect" });
-          clientChannelPort.close();
+          this.onStop();
+          console.log('server close');
         }
       }
     };
 
     this._listeners = updateListeners({ listeners: this._listeners, type: "message", func: connectionHandler });
-    clientChannelPort.addEventListener("message", connectionHandler);
-    clientChannelPort.start();
-    this._onConnection(new EventsClient({ clientChannelPort: clientChannelPort, _listeners: this._listeners }));
+    this._clientChannelPort.addEventListener("message", connectionHandler);
+    this._clientChannelPort.start();
+    this._onConnection(new EventsClient({ clientChannelPort: this._clientChannelPort, listeners: this._listeners }));
   }
 
   onConnect(cb: Function) {
     this._onConnection = cb;
+  }
+
+  onStop() {
+    this._clientChannelPort.postMessage({ type: "disconnect" });
+    this._clientChannelPort.close();
+    console.log('server onStop');
   }
 }
 
@@ -69,7 +77,7 @@ class EventsClient implements IChannelServer {
 
   constructor(options: ChannelOptionsServer) {
     this.clientChannelPort = options.clientChannelPort;
-    this._listeners = options._listeners || [];
+    this._listeners = options.listeners || [];
   }
 
   connect(): Connection {
@@ -89,6 +97,7 @@ class EventsClient implements IChannelServer {
         this.clientChannelPort.addEventListener("message", requestMessage);
       },
       disconnect: () => {
+        console.log('server disconnect');
         this.clientChannelPort.postMessage(newMessage({ type: "disconnect", payload: null }));
         this._listeners.forEach(({ type, func }) => this.clientChannelPort.removeEventListener(type, func));
       }

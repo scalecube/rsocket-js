@@ -4,7 +4,11 @@ import RSocketEventsServer from "rsocket-events-server";
 import { MAX_STREAM_ID, RSocketClient, RSocketServer } from "rsocket-core";
 import { Flowable, Single } from "rsocket-flowable";
 
-(function serverSide(serverOptions) {
+const serverStop = (function serverSide() {
+  const serverOptions = {
+    address: "pm://host/path:80"
+  };
+
   const server = new RSocketServer({
     getRequestHandler: socket => {
       // runOperation(socket, {
@@ -16,9 +20,8 @@ import { Flowable, Single } from "rsocket-flowable";
     transport: new RSocketEventsServer(serverOptions)
   });
   server.start();
-})({
-  address: "pm://host/path:80"
-});
+  return server.stop.bind(server);
+})();
 
 (function clientSide(clientOptions) {
   const client = new RSocketClient({
@@ -39,11 +42,14 @@ import { Flowable, Single } from "rsocket-flowable";
       operation: "requestResponse",
       payload: "requestResponse testing"
     });
-
+    // serverStop();
+    // client.close();
     pickOperation(socket, {
       operation: "requestStream",
       payload: "requestStream testing"
     });
+    // serverStop();
+    // client.close();
   });
 
   function pickOperation(socket, { operation, payload }) {

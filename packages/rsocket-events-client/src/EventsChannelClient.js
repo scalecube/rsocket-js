@@ -3,20 +3,20 @@
  */
 
 export interface Connection {
-  send(msg: Object): void;
+  send(msg: Object): void,
 
-  receive(cb: Function): void;
+  receive(cb: Function): void,
 
-  disconnect(): void;
+  disconnect(): void,
 }
 
 export interface ChannelOptionsClient {
-  eventType?: string;
+  eventType?: string,
   confirmConnectionOpenCallback?: Function
 }
 
 export interface IChannelClient {
-  constructor(options: ChannelOptionsClient): void;
+  constructor(options: ChannelOptionsClient): void,
 
-  connect(address: string): Connection;
+  connect(address: string): Connection,
 }

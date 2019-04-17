@@ -17,6 +17,6 @@
 
 'use strict';
 
-import RSocketEventsServer from "./RSocketEventsServer";
+import RSocketEventsServer from './RSocketEventsServer';
 
 export default RSocketEventsServer;

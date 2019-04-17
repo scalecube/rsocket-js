@@ -10,7 +10,7 @@ function createBuffer(length): Buffer {
     );
   }
   // Return an augmented `Uint8Array` instance
-  let buf = new Uint8Array(length);
+  const buf = new Uint8Array(length);
   // $FlowFixMe
   buf.__proto__ = Buffer.prototype;
   return buf;
@@ -59,13 +59,13 @@ function from(value, encodingOrOffset, length): Buffer {
     );
   }
 
-  let valueOf = value.valueOf && value.valueOf();
+  const valueOf = value.valueOf && value.valueOf();
   if (valueOf != null && valueOf !== value) {
     return Buffer.from(valueOf, encodingOrOffset, length);
   }
 
-  let b = fromObject(value);
-  if (b) return b;
+  const b = fromObject(value);
+  if (b) {return b;}
 
   throw new TypeError(
     'The first argument must be one of type string, Buffer, ArrayBuffer, ' +
@@ -110,8 +110,8 @@ function allocUnsafe(size) {
 }
 
 function fromArrayLike(array: any) {
-  let length = array.length < 0 ? 0 : checked(array.length) | 0;
-  let buf: Buffer = createBuffer(length);
+  const length = array.length < 0 ? 0 : checked(array.length) | 0;
+  const buf: Buffer = createBuffer(length);
   for (let i = 0; i < length; i += 1) {
     buf[i] = array[i] & 255;
   }
@@ -135,8 +135,8 @@ function fromArrayBuffer(array: any, byteOffset?: number, length?: number) {
 
 function fromObject(obj: Buffer) {
   if (Buffer.isBuffer(obj)) {
-    let len = checked(obj.length) | 0;
-    let buf: Buffer = createBuffer(len);
+    const len = checked(obj.length) | 0;
+    const buf: Buffer = createBuffer(len);
 
     if (buf.length === 0) {
       return buf;
@@ -210,7 +210,7 @@ function blitBuffer(
   length: number,
 ) {
   for (var i = 0; i < length; ++i) {
-    if (i + offset >= dst.length || i >= src.length) break;
+    if (i + offset >= dst.length || i >= src.length) {break;}
     dst[i + offset] = src[i];
   }
   return i;
@@ -244,10 +244,10 @@ Buffer.prototype.write = function write(
   }
 };
 
-let MAX_ARGUMENTS_LENGTH = 0x1000;
+const MAX_ARGUMENTS_LENGTH = 0x1000;
 
 function decodeCodePointsArray(codePoints) {
-  let len = codePoints.length;
+  const len = codePoints.length;
   if (len <= MAX_ARGUMENTS_LENGTH) {
     return String.fromCharCode.apply(String, codePoints); // avoid extra slice()
   }
@@ -275,45 +275,43 @@ function asciiSlice(buf, start, end) {
 }
 
 Buffer.prototype.slice = function slice(start: number, end: number) {
-  let len = this.length;
+  const len = this.length;
   start = ~~start;
   end = end === undefined ? len : ~~end;
 
   if (start < 0) {
     start += len;
-    if (start < 0) start = 0;
+    if (start < 0) {start = 0;}
   } else if (start > len) {
     start = len;
   }
 
   if (end < 0) {
     end += len;
-    if (end < 0) end = 0;
+    if (end < 0) {end = 0;}
   } else if (end > len) {
     end = len;
   }
 
-  if (end < start) end = start;
+  if (end < start) {end = start;}
 
-  let newBuf = this.subarray(start, end);
+  const newBuf = this.subarray(start, end);
   // Return an augmented `Uint8Array` instance
   newBuf.__proto__ = Buffer.prototype;
   return newBuf;
 };
 
 function checkOffset(offset, ext, length) {
-  if (offset % 1 !== 0 || offset < 0)
-    throw new RangeError('offset is not uint');
-  if (offset + ext > length)
-    throw new RangeError('Trying to access beyond buffer length');
+  if (offset % 1 !== 0 || offset < 0)    {throw new RangeError('offset is not uint');}
+  if (offset + ext > length)    {throw new RangeError('Trying to access beyond buffer length');}
 }
 
 Buffer.prototype.readUInt8 = function readUInt8(
   offset: number,
   noAssert: boolean,
 ) {
-  offset = offset >>> 0;
-  if (!noAssert) checkOffset(offset, 1, this.length);
+  offset >>>= 0;
+  if (!noAssert) {checkOffset(offset, 1, this.length);}
   return this[offset];
 };
 
@@ -321,8 +319,8 @@ Buffer.prototype.readUInt16BE = function readUInt16BE(
   offset: number,
   noAssert: boolean,
 ) {
-  offset = offset >>> 0;
-  if (!noAssert) checkOffset(offset, 2, this.length);
+  offset >>>= 0;
+  if (!noAssert) {checkOffset(offset, 2, this.length);}
   return this[offset] << 8 | this[offset + 1];
 };
 
@@ -330,8 +328,8 @@ Buffer.prototype.readUInt32BE = function readUInt32BE(
   offset: number,
   noAssert: boolean,
 ) {
-  offset = offset >>> 0;
-  if (!noAssert) checkOffset(offset, 4, this.length);
+  offset >>>= 0;
+  if (!noAssert) {checkOffset(offset, 4, this.length);}
 
   return this[offset] * 0x1000000 +
     (this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3]);
@@ -341,9 +339,9 @@ Buffer.prototype.readInt8 = function readInt8(
   offset: number,
   noAssert: boolean,
 ) {
-  offset = offset >>> 0;
-  if (!noAssert) checkOffset(offset, 1, this.length);
-  if (!(this[offset] & 0x80)) return this[offset];
+  offset >>>= 0;
+  if (!noAssert) {checkOffset(offset, 1, this.length);}
+  if (!(this[offset] & 0x80)) {return this[offset];}
   return (0xff - this[offset] + 1) * -1;
 };
 
@@ -351,9 +349,9 @@ Buffer.prototype.readInt16BE = function readInt16BE(
   offset: number,
   noAssert: boolean,
 ) {
-  offset = offset >>> 0;
-  if (!noAssert) checkOffset(offset, 2, this.length);
-  let val = this[offset + 1] | this[offset] << 8;
+  offset >>>= 0;
+  if (!noAssert) {checkOffset(offset, 2, this.length);}
+  const val = this[offset + 1] | this[offset] << 8;
   return val & 0x8000 ? val | 0xffff0000 : val;
 };
 
@@ -361,8 +359,8 @@ Buffer.prototype.readInt32BE = function readInt32BE(
   offset: number,
   noAssert: boolean,
 ) {
-  offset = offset >>> 0;
-  if (!noAssert) checkOffset(offset, 4, this.length);
+  offset >>>= 0;
+  if (!noAssert) {checkOffset(offset, 4, this.length);}
 
   return this[offset] << 24 |
     this[offset + 1] << 16 |
@@ -371,11 +369,9 @@ Buffer.prototype.readInt32BE = function readInt32BE(
 };
 
 function checkInt(buf, value, offset, ext, max, min) {
-  if (!Buffer.isBuffer(buf))
-    throw new TypeError('"buffer" argument must be a Buffer instance');
-  if (value > max || value < min)
-    throw new RangeError('"value" argument is out of bounds');
-  if (offset + ext > buf.length) throw new RangeError('Index out of range');
+  if (!Buffer.isBuffer(buf))    {throw new TypeError('"buffer" argument must be a Buffer instance');}
+  if (value > max || value < min)    {throw new RangeError('"value" argument is out of bounds');}
+  if (offset + ext > buf.length) {throw new RangeError('Index out of range');}
 }
 
 Buffer.prototype.writeUInt8 = function writeUInt8(
@@ -384,8 +380,8 @@ Buffer.prototype.writeUInt8 = function writeUInt8(
   noAssert: boolean,
 ) {
   value = +value;
-  offset = offset >>> 0;
-  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0);
+  offset >>>= 0;
+  if (!noAssert) {checkInt(this, value, offset, 1, 0xff, 0);}
   this[offset] = value & 0xff;
   return offset + 1;
 };
@@ -396,8 +392,8 @@ Buffer.prototype.writeUInt16BE = function writeUInt16BE(
   noAssert: boolean,
 ) {
   value = +value;
-  offset = offset >>> 0;
-  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0);
+  offset >>>= 0;
+  if (!noAssert) {checkInt(this, value, offset, 2, 0xffff, 0);}
   this[offset] = value >>> 8;
   this[offset + 1] = value & 0xff;
   return offset + 2;
@@ -409,8 +405,8 @@ Buffer.prototype.writeUInt32BE = function writeUInt32BE(
   noAssert: boolean,
 ) {
   value = +value;
-  offset = offset >>> 0;
-  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0);
+  offset >>>= 0;
+  if (!noAssert) {checkInt(this, value, offset, 4, 0xffffffff, 0);}
   this[offset] = value >>> 24;
   this[offset + 1] = value >>> 16;
   this[offset + 2] = value >>> 8;
@@ -424,8 +420,8 @@ Buffer.prototype.writeInt16BE = function writeInt16BE(
   noAssert: boolean,
 ) {
   value = +value;
-  offset = offset >>> 0;
-  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000);
+  offset >>>= 0;
+  if (!noAssert) {checkInt(this, value, offset, 2, 0x7fff, -0x8000);}
   this[offset] = value >>> 8;
   this[offset + 1] = value & 0xff;
   return offset + 2;
@@ -437,9 +433,9 @@ Buffer.prototype.writeInt32BE = function writeInt32BE(
   noAssert: boolean,
 ) {
   value = +value;
-  offset = offset >>> 0;
-  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);
-  if (value < 0) value = 0xffffffff + value + 1;
+  offset >>>= 0;
+  if (!noAssert) {checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);}
+  if (value < 0) {value = 0xffffffff + value + 1;}
   this[offset] = value >>> 24;
   this[offset + 1] = value >>> 16;
   this[offset + 2] = value >>> 8;
@@ -449,8 +445,8 @@ Buffer.prototype.writeInt32BE = function writeInt32BE(
 
 // $FlowFixMe
 Buffer.prototype.toString = function toString() {
-  let length = this.length;
-  if (length === 0) return '';
+  const length = this.length;
+  if (length === 0) {return '';}
   return slowToString.apply(this, arguments);
 };
 
@@ -481,7 +477,7 @@ function slowToString(encoding, start, end) {
     return '';
   }
 
-  if (!encoding) encoding = 'utf8';
+  if (!encoding) {encoding = 'utf8';}
 
   while (true) {
     switch (encoding) {
@@ -489,8 +485,7 @@ function slowToString(encoding, start, end) {
       case 'utf-8':
         return utf8Slice(this, start, end);
       default:
-        if (loweredCase)
-          throw new TypeError('Unsupported encoding: ' + encoding);
+        if (loweredCase)          {throw new TypeError('Unsupported encoding: ' + encoding);}
         encoding = (encoding + '').toLowerCase();
         loweredCase = true;
     }
@@ -499,9 +494,9 @@ function slowToString(encoding, start, end) {
 function utf8ToBytes(str: string, pUnits: number = Infinity) {
   let units = pUnits;
   let codePoint;
-  let length = str.length;
+  const length = str.length;
   let leadSurrogate = null;
-  let bytes = [];
+  const bytes = [];
 
   for (let i = 0; i < length; ++i) {
     codePoint = str.charCodeAt(i);
@@ -513,11 +508,11 @@ function utf8ToBytes(str: string, pUnits: number = Infinity) {
         // no lead yet
         if (codePoint > 0xdbff) {
           // unexpected trail
-          if ((units -= 3) > -1) bytes.push(0xef, 0xbf, 0xbd);
+          if ((units -= 3) > -1) {bytes.push(0xef, 0xbf, 0xbd);}
           continue;
         } else if (i + 1 === length) {
           // unpaired lead
-          if ((units -= 3) > -1) bytes.push(0xef, 0xbf, 0xbd);
+          if ((units -= 3) > -1) {bytes.push(0xef, 0xbf, 0xbd);}
           continue;
         }
 
@@ -529,7 +524,7 @@ function utf8ToBytes(str: string, pUnits: number = Infinity) {
 
       // 2 leads in a row
       if (codePoint < 0xdc00) {
-        if ((units -= 3) > -1) bytes.push(0xef, 0xbf, 0xbd);
+        if ((units -= 3) > -1) {bytes.push(0xef, 0xbf, 0xbd);}
         leadSurrogate = codePoint;
         continue;
       }
@@ -538,27 +533,27 @@ function utf8ToBytes(str: string, pUnits: number = Infinity) {
       codePoint = (leadSurrogate - 0xd800 << 10 | codePoint - 0xdc00) + 0x10000;
     } else if (leadSurrogate) {
       // valid bmp char, but last char was a lead
-      if ((units -= 3) > -1) bytes.push(0xef, 0xbf, 0xbd);
+      if ((units -= 3) > -1) {bytes.push(0xef, 0xbf, 0xbd);}
     }
 
     leadSurrogate = null;
 
     // encode utf8
     if (codePoint < 0x80) {
-      if ((units -= 1) < 0) break;
+      if ((units -= 1) < 0) {break;}
       bytes.push(codePoint);
     } else if (codePoint < 0x800) {
-      if ((units -= 2) < 0) break;
+      if ((units -= 2) < 0) {break;}
       bytes.push(codePoint >> 0x6 | 0xc0, codePoint & 0x3f | 0x80);
     } else if (codePoint < 0x10000) {
-      if ((units -= 3) < 0) break;
+      if ((units -= 3) < 0) {break;}
       bytes.push(
         codePoint >> 0xc | 0xe0,
         codePoint >> 0x6 & 0x3f | 0x80,
         codePoint & 0x3f | 0x80,
       );
     } else if (codePoint < 0x110000) {
-      if ((units -= 4) < 0) break;
+      if ((units -= 4) < 0) {break;}
       bytes.push(
         codePoint >> 0x12 | 0xf0,
         codePoint >> 0xc & 0x3f | 0x80,
@@ -588,9 +583,9 @@ function byteLength(string, encoding): number {
     );
   }
 
-  let len = string.length;
-  let mustMatch = arguments.length > 2 && arguments[2] === true;
-  if (!mustMatch && len === 0) return 0;
+  const len = string.length;
+  const mustMatch = arguments.length > 2 && arguments[2] === true;
+  if (!mustMatch && len === 0) {return 0;}
 
   // Use a for loop to avoid recursion
   let loweredCase = false;
@@ -615,11 +610,11 @@ Buffer.byteLength = byteLength;
 
 function utf8Slice(buf, start, end) {
   end = Math.min(buf.length, end);
-  let res = [];
+  const res = [];
 
   let i = start;
   while (i < end) {
-    let firstByte = buf[i];
+    const firstByte = buf[i];
     let codePoint = null;
     let bytesPerSequence = firstByte > 0xef
       ? 4
@@ -704,33 +699,31 @@ Buffer.prototype.copy = function copy(
   start?: number,
   end?: number,
 ) {
-  if (!Buffer.isBuffer(target))
-    throw new TypeError('argument should be a Buffer');
-  if (!start) start = 0;
-  if (!end && end !== 0) end = this.length;
-  if (targetStart >= target.length) targetStart = target.length;
-  if (!targetStart) targetStart = 0;
-  if (end > 0 && end < start) end = start;
+  if (!Buffer.isBuffer(target))    {throw new TypeError('argument should be a Buffer');}
+  if (!start) {start = 0;}
+  if (!end && end !== 0) {end = this.length;}
+  if (targetStart >= target.length) {targetStart = target.length;}
+  if (!targetStart) {targetStart = 0;}
+  if (end > 0 && end < start) {end = start;}
 
   // Copy 0 bytes; we're done
-  if (end === start) return 0;
-  if (target.length === 0 || this.length === 0) return 0;
+  if (end === start) {return 0;}
+  if (target.length === 0 || this.length === 0) {return 0;}
 
   // Fatal error conditions
   if (targetStart < 0) {
     throw new RangeError('targetStart out of bounds');
   }
-  if (start < 0 || start >= this.length)
-    throw new RangeError('Index out of range');
-  if (end < 0) throw new RangeError('sourceEnd out of bounds');
+  if (start < 0 || start >= this.length)    {throw new RangeError('Index out of range');}
+  if (end < 0) {throw new RangeError('sourceEnd out of bounds');}
 
   // Are we oob?
-  if (end > this.length) end = this.length;
+  if (end > this.length) {end = this.length;}
   if (target.length - targetStart < end - start) {
     end = target.length - targetStart + start;
   }
 
-  let len = end - start;
+  const len = end - start;
 
   if (
     this === target && typeof Uint8Array.prototype.copyWithin === 'function'

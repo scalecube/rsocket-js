@@ -4,14 +4,14 @@
  * @flow
  */
 
-"use strict";
+'use strict';
 
-import type { ConnectionStatus, DuplexConnection, Frame, ISubject } from "rsocket-types";
-import EventsClient from "./EventsClient";
-import { Flowable } from "rsocket-flowable";
-import type { Connection } from "./EventsChannelClient";
-import { CONNECTION_STATUS } from "rsocket-types";
-import invariant from "fbjs/lib/invariant";
+import type {ConnectionStatus, DuplexConnection, Frame, ISubject} from 'rsocket-types';
+import EventsClient from './EventsClient';
+import {Flowable} from 'rsocket-flowable';
+import type {Connection} from './EventsChannelClient';
+import {CONNECTION_STATUS} from 'rsocket-types';
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * A WebSocket transport client for use in browser environments.
@@ -23,15 +23,19 @@ export default class RSocketEventsClient implements DuplexConnection {
   connection: Connection;
   _statusSubscribers: Set<ISubject<ConnectionStatus>>;
   _status: ConnectionStatus;
-  constructor(options: { eventClient?: Object; address: string;}) {
+
+  constructor(options: { eventClient?: Object, address: string, }) {
     this._receivers = new Set();
-    this._eventsClient = options.eventClient || new EventsClient({ eventType: "defaultEventsListener", confirmConnectionOpenCallback: this.confirmConnectionOpenCallback.bind(this) });
+    this._eventsClient = options.eventClient || new EventsClient({
+      confirmConnectionOpenCallback: this.confirmConnectionOpenCallback.bind(this),
+      eventType: 'defaultEventsListener',
+    });
     this._address = options.address;
     this._statusSubscribers = new Set();
     this._status = CONNECTION_STATUS.NOT_CONNECTED;
   }
 
-  confirmConnectionOpenCallback(){
+  confirmConnectionOpenCallback() {
     this._setConnectionStatus(CONNECTION_STATUS.CONNECTED);
   }
 
@@ -39,7 +43,7 @@ export default class RSocketEventsClient implements DuplexConnection {
    * Send a single frame on the connection.
    */
   sendOne(frame: Frame): void {
-    if ( !this.connection ) {
+    if (!this.connection) {
       return;
     }
     this.connection.send(frame);
@@ -54,7 +58,7 @@ export default class RSocketEventsClient implements DuplexConnection {
    *   `receive()` Publisher.
    */
   send(input: Flowable<Frame>): void {
-    if ( !this.connection ) {
+    if (!this.connection) {
       return;
     }
     input.subscribe(frame => this.connection.send(frame));
@@ -79,7 +83,7 @@ export default class RSocketEventsClient implements DuplexConnection {
         },
         request: () => {
           this._receivers.add(subject);
-        }
+        },
       });
     });
   }
@@ -105,7 +109,7 @@ export default class RSocketEventsClient implements DuplexConnection {
     });
     this._receivers.clear();
 
-    this.connection && typeof this.connection.disconnect === "function" && this.connection.disconnect();
+    this.connection && typeof this.connection.disconnect === 'function' && this.connection.disconnect();
     this._eventsClient = null;
   }
 
@@ -117,17 +121,17 @@ export default class RSocketEventsClient implements DuplexConnection {
     invariant(
       this._status.kind === 'NOT_CONNECTED',
       'RSocketWebSocketClient: Cannot connect(), a connection is already ' +
-      'established.',
+      'established.'
     );
     this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
 
-    if (this._eventsClient){
+    if (this._eventsClient) {
       const _eventsClient = this._eventsClient;
       this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
       this.connection = _eventsClient.connect(this._address);
-      this.connection.receive((payload) => {
+      this.connection.receive(payload => {
         const frame = payload;
         frame && this._receivers.forEach(subscriber => subscriber.onNext(frame));
       });

@@ -3,33 +3,33 @@
  * @flow
  */
 
-export const newMessage = ({ type, payload }: NewMessageOptions) =>
+export const newMessage = ({type, payload}: NewMessageOptions) =>
   ({
+    cid: Date.now() + '-' + Math.random(),
+    payload,
     type,
-    cid: Date.now() + "-" + Math.random(),
-    payload
   });
 
 export const getMessageData = (eventMsg?: { data: any }): any =>
   eventMsg ? eventMsg.data : null;
 
-export const updateListeners = ({ listeners = [], type, func }: UpdateListenersOptions) => (type && func) ?
-  [...listeners, { type, func }] :
+export const updateListeners = ({listeners = [], type, func}: UpdateListenersOptions) => (type && func) ?
+  [...listeners, {func, type}] :
   [...listeners];
 
 
 export interface IEventListener {
-  type: string;
-  func: (...data: any[]) => any;
+  func: (...data: any[]) => any,
+  type: string,
 }
 
 interface UpdateListenersOptions {
-  type: string;
-  func: Function;
-  listeners?: IEventListener[];
+  func: Function,
+  listeners?: IEventListener[],
+  type: string,
 }
 
 interface NewMessageOptions {
-  payload?: any;
-  type?: string;
+  payload?: any,
+  type?: string,
 }

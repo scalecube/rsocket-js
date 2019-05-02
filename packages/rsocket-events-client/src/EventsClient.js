@@ -33,13 +33,11 @@ export default class EventsClient implements IChannelClient {
       const {type} = getMessageData(eventMsg);
       switch (type) {
         case 'connect': {
-          console.log('connect-client');
           typeof this.confirmConnectionOpenCallback === 'function' && this.confirmConnectionOpenCallback();
           break;
         }
         case 'disconnect': {
           if (channel) {
-            console.log('disconnect-client');
             channel.port1.close();
             Array.isArray(listeners) && listeners.forEach(({type, func}) => channel.port1.removeEventListener(type, func));
             channel = null;
@@ -58,7 +56,6 @@ export default class EventsClient implements IChannelClient {
 
     return Object.freeze({
       disconnect: () => {
-        console.log('client close');
         channel.port1.postMessage(newMessage({
           payload: null,
           type: 'close',
@@ -69,7 +66,6 @@ export default class EventsClient implements IChannelClient {
         const responseMessage = eventMsg => {
           const {type, payload} = getMessageData(eventMsg);
           if (type === 'response') {
-            console.log('response', payload);
             cb(payload);
           }
         };
@@ -82,7 +78,6 @@ export default class EventsClient implements IChannelClient {
         channel.port1.addEventListener('message', responseMessage);
       },
       send: msg => {
-        console.log('request', msg);
         channel.port1.postMessage(newMessage({
           payload: msg,
           type: 'request',

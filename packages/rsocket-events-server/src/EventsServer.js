@@ -53,7 +53,6 @@ export default class EventsServer {
       switch (event.type) {
         case 'close': {
           this.onStop();
-          console.log('server close');
         }
       }
     };
@@ -75,7 +74,6 @@ export default class EventsServer {
   onStop() {
     this._clientChannelPort.postMessage({type: 'disconnect'});
     this._clientChannelPort.close();
-    console.log('server onStop');
   }
 }
 
@@ -91,7 +89,6 @@ class EventsClient implements IChannelServer {
   connect(): Connection {
     return {
       disconnect: () => {
-        console.log('server disconnect');
         this.clientChannelPort.postMessage(newMessage({payload: null, type: 'disconnect'}));
         this._listeners.forEach(({func, type}) => this.clientChannelPort.removeEventListener(type, func));
       },
@@ -99,7 +96,6 @@ class EventsClient implements IChannelServer {
         const requestMessage = eventMsg => {
           const {payload, type} = getMessageData(eventMsg);
           if (type === 'request') {
-            console.log('receive-request', payload);
             cb(payload);
           }
         };

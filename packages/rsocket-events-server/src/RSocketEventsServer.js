@@ -18,11 +18,11 @@
 
 'use strict';
 
-import {Flowable} from 'rsocket-flowable';
+import { Flowable } from 'rsocket-flowable';
 import RSocketEventsClient from 'rsocket-events-client';
 import EventsServer from './EventsServer';
-import type {TransportServer} from 'rsocket-core';
-import type {ConnectionStatus, DuplexConnection, Frame} from 'rsocket-types';
+import type { TransportServer } from 'rsocket-core';
+import type { ConnectionStatus, DuplexConnection, Frame } from 'rsocket-types';
 
 export type ServerOptions = {
   address: string,
@@ -48,25 +48,29 @@ export default class RSocketEventsServer implements TransportServer {
     return new Flowable(subscriber => {
       subscriber.onSubscribe({
         cancel: () => {
-          if (!this._server) {
+          if ( !this._server ) {
             return;
           }
           this._server.onStop();
         },
         request: () => {
           this._server.onConnect(eventClient => {
-            const eventClientConnection = new RSocketEventsClient({address: this.address, eventClient});
-            this._subscribers.add(eventClientConnection);
-            eventClientConnection.connect();
-            subscriber.onNext(eventClientConnection);
+            const eventClientConnection = new RSocketEventsClient({ address: this.address, eventClient });
+            if ( eventClientConnection ) {
+              this._subscribers.add(eventClientConnection);
+              eventClientConnection.connect();
+              subscriber.onNext(eventClientConnection);
+            } else {
+              subscriber.error(`unable to create connection - address: ${ this.address }`);
+            }
           });
-        },
+        }
       });
     });
   }
 
   stop(): void {
-    if (!this._subscribers) {
+    if ( !this._subscribers ) {
       return;
     }
     this._subscribers.forEach(subscriber => subscriber.close());

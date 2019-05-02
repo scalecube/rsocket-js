@@ -1,6 +1,6 @@
 {
   "name": "rsocket-events-server",
-  "description": "RSocket WebSocket server",
+  "description": "RSocket Events server for use in browser environments",
   "version": "0.0.14",
   "repository": {
     "type": "git",

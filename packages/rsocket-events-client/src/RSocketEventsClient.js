@@ -6,11 +6,11 @@
 
 'use strict';
 
-import type {ConnectionStatus, DuplexConnection, Frame, ISubject} from 'rsocket-types';
+import type { ConnectionStatus, DuplexConnection, Frame, ISubject } from 'rsocket-types';
 import EventsClient from './EventsClient';
-import {Flowable} from 'rsocket-flowable';
-import type {Connection} from './EventsChannelClient';
-import {CONNECTION_STATUS} from 'rsocket-types';
+import { Flowable } from 'rsocket-flowable';
+import type { Connection } from './EventsChannelClient';
+import { CONNECTION_STATUS } from 'rsocket-types';
 import invariant from 'fbjs/lib/invariant';
 
 /**
@@ -23,16 +23,18 @@ export default class RSocketEventsClient implements DuplexConnection {
   connection: Connection;
   _statusSubscribers: Set<ISubject<ConnectionStatus>>;
   _status: ConnectionStatus;
+  debug: boolean;
 
-  constructor(options: { eventClient?: Object, address: string, }) {
+  constructor({ eventClient, address, debug = false }: { eventClient?: Object, address: string, debug?: boolean }) {
     this._receivers = new Set();
-    this._eventsClient = options.eventClient || new EventsClient({
+    this._eventsClient = eventClient || new EventsClient({
       confirmConnectionOpenCallback: this.confirmConnectionOpenCallback.bind(this),
-      eventType: 'defaultEventsListener',
+      eventType: 'defaultEventsListener'
     });
-    this._address = options.address;
+    this._address = address;
     this._statusSubscribers = new Set();
     this._status = CONNECTION_STATUS.NOT_CONNECTED;
+    this.debug = debug;
   }
 
   confirmConnectionOpenCallback() {
@@ -43,7 +45,7 @@ export default class RSocketEventsClient implements DuplexConnection {
    * Send a single frame on the connection.
    */
   sendOne(frame: Frame): void {
-    if (!this.connection) {
+    if ( !this.connection ) {
       return;
     }
     this.connection.send(frame);
@@ -58,10 +60,17 @@ export default class RSocketEventsClient implements DuplexConnection {
    *   `receive()` Publisher.
    */
   send(input: Flowable<Frame>): void {
-    if (!this.connection) {
+    if ( !this.connection ) {
       return;
     }
-    input.subscribe(frame => this.connection.send(frame));
+    input.subscribe(frame => {
+      if ( __DEV__ ) {
+        if ( this.debug ) {
+          console.log('RSocketEventsClient send frame: ', frame);
+        }
+      }
+      this.connection.send(frame);
+    });
   }
 
   /**
@@ -83,7 +92,7 @@ export default class RSocketEventsClient implements DuplexConnection {
         },
         request: () => {
           this._receivers.add(subject);
-        },
+        }
       });
     });
   }
@@ -93,15 +102,15 @@ export default class RSocketEventsClient implements DuplexConnection {
    * Publisher.
    */
   close(error?: Error): void {
-    if (this._status.kind === 'CLOSED' || this._status.kind === 'ERROR') {
+    if ( this._status.kind === 'CLOSED' || this._status.kind === 'ERROR' ) {
       // already closed
       return;
     }
-    const status = error ? {error, kind: 'ERROR'} : CONNECTION_STATUS.CLOSED;
+    const status = error ? { error, kind: 'ERROR' } : CONNECTION_STATUS.CLOSED;
     this._setConnectionStatus(status);
 
     this._receivers.forEach(subscriber => {
-      if (error) {
+      if ( error ) {
         subscriber.onError(error);
       } else {
         subscriber.onComplete();
@@ -120,19 +129,23 @@ export default class RSocketEventsClient implements DuplexConnection {
   connect(): void {
     invariant(
       this._status.kind === 'NOT_CONNECTED',
-      'RSocketWebSocketClient: Cannot connect(), a connection is already ' +
+      'RSocketEventsClient: Cannot connect(), a connection is already ' +
       'established.'
     );
     this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
 
-    if (this._eventsClient) {
+    if ( this._eventsClient ) {
       const _eventsClient = this._eventsClient;
       this._setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
       this.connection = _eventsClient.connect(this._address);
-      this.connection.receive(payload => {
-        const frame = payload;
+      this.connection.receive(frame => {
+        if ( __DEV__ ) {
+          if ( this.debug ) {
+            console.log('RSocketEventsClient received frame: ', frame);
+          }
+        }
         frame && this._receivers.forEach(subscriber => subscriber.onNext(frame));
       });
     } else {
@@ -155,7 +168,7 @@ export default class RSocketEventsClient implements DuplexConnection {
         request: () => {
           this._statusSubscribers.add(subscriber);
           subscriber.onNext(this._status);
-        },
+        }
       });
     });
   }

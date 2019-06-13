@@ -1,12 +1,13 @@
 import RSocketEventsClient from 'rsocket-events-client';
 import RSocketEventsServer from 'rsocket-events-server';
 
-import {MAX_STREAM_ID, RSocketClient, RSocketServer} from 'rsocket-core';
-import {Flowable, Single} from 'rsocket-flowable';
+import { MAX_STREAM_ID, RSocketClient, RSocketServer } from 'rsocket-core';
+import { Flowable, Single } from 'rsocket-flowable';
 
 const serverStop = (function serverSide() {
   const serverOptions = {
     address: 'pm://host/path:80',
+    debug: true
   };
 
   const server = new RSocketServer({
@@ -17,7 +18,7 @@ const serverStop = (function serverSide() {
       // });
       return new SymmetricResponder();
     },
-    transport: new RSocketEventsServer(serverOptions),
+    transport: new RSocketEventsServer(serverOptions)
   });
   server.start();
   return server.stop.bind(server);
@@ -29,52 +30,52 @@ const serverStop = (function serverSide() {
       dataMimeType: 'text/plain',
       keepAlive: 1000000, // avoid sending during test
       lifetime: 100000,
-      metadataMimeType: 'text/plain',
+      metadataMimeType: 'text/plain'
     },
     // responder: data =>
     //   console.log(`responder ${ data }`)
     // ,
-    transport: new RSocketEventsClient(clientOptions),
+    transport: new RSocketEventsClient(clientOptions)
   });
 
   client.connect().then(socket => {
     pickOperation(socket, {
       operation: 'requestResponse',
-      payload: 'requestResponse testing',
+      payload: 'requestResponse testing'
     });
     // serverStop();
     // client.close();
     pickOperation(socket, {
       operation: 'requestStream',
-      payload: 'requestStream testing',
+      payload: 'requestStream testing'
     });
     // serverStop();
     // client.close();
   });
 
-  function pickOperation(socket, {operation, payload}) {
+  function pickOperation(socket, { operation, payload }) {
     console.log(`Requesting ${ operation } with payload: ${ payload }`);
-    switch (operation) {
+    switch ( operation ) {
       case 'none':
         return Flowable.never();
       case 'requestResponse':
         return socket.requestResponse({
           data: payload,
-          metadata: '',
-        }).then(({data, metadata}) =>
+          metadata: ''
+        }).then(({ data, metadata }) =>
           console.log(`response ${ data }`)
         );
       case 'requestStream':
         return socket.requestStream({
           data: payload,
-          metadata: '',
+          metadata: ''
         }).subscribe(observer);
       default:
         return null;
     }
   }
 
-})({address: 'pm://host/path:80'});
+})({ address: 'pm://host/path:80', debug: true });
 
 
 const observer = {
@@ -89,7 +90,7 @@ const observer = {
   },
   onSubscribe(_subscription) {
     _subscription.request(MAX_STREAM_ID);
-  },
+  }
 };
 
 class SymmetricResponder {
@@ -127,6 +128,6 @@ function logRequest(type, payload) {
 function make(data) {
   return {
     data,
-    metadata: '',
+    metadata: ''
   };
 }

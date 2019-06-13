@@ -34,7 +34,7 @@ export default class EventsClient implements IChannelClient {
     }
 
     // send open message to the server with a port message
-    pingServer(this.eventType, channel);
+    pingServer(this.eventType, channel, address);
 
     listeners = updateListeners({
       func: initConnection,
@@ -83,7 +83,7 @@ export default class EventsClient implements IChannelClient {
   }
 }
 
-const pingServer = (type, channel) => {
+const pingServer = (type, channel, address) => {
   // $FlowFixMe
   typeof postMessage === 'function' && postMessage({ // eslint-disable-line
     detail: {

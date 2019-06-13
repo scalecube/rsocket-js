@@ -2,7 +2,7 @@
   "name": "rsocket-examples",
   "private": true,
   "description": "RSocket examples",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "main": "src/browser.js",
   "repository": {
     "type": "git",

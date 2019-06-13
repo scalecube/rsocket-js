@@ -3,18 +3,19 @@
  * @flow
  */
 
-export const newMessage = ({type, payload}: NewMessageOptions) =>
+export const newMessage = ({ type, payload }: NewMessageOptions) =>
   ({
     cid: Date.now() + '-' + Math.random(),
     payload,
-    type,
+    type
   });
 
-export const getMessageData = (eventMsg?: { data: any }): any =>
-  eventMsg ? eventMsg.data : null;
+// $FlowFixMe
+export const getMessageData = ({ data }: { data?: any }): any =>
+  data || null;
 
-export const updateListeners = ({listeners = [], type, func}: UpdateListenersOptions) => (type && func) ?
-  [...listeners, {func, type}] :
+export const updateListeners = ({ listeners = [], type, func }: UpdateListenersOptions) => (type && func) ?
+  [...listeners, { func, type }] :
   [...listeners];
 
 

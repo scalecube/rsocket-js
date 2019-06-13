@@ -12,7 +12,8 @@ export interface Connection {
 
 export interface ChannelOptionsClient {
   eventType?: string,
-  confirmConnectionOpenCallback?: Function
+  confirmConnectionOpenCallback?: Function,
+  debug ?: boolean | null,
 }
 
 export interface IChannelClient {

@@ -1,16 +1,8 @@
-/** Copyright (c) Facebook, Inc. and its affiliates.
+/**
+ * written with <3 by scaleCube-js maintainers
  *
- * Licensed under the Apache License, Version 2.0 (the 'License');
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an 'AS IS' BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * RSocketEventsServer Transport provider for event base messages
+ * browser <--> browser
  *
  * @flow
  */
@@ -27,7 +19,8 @@ import type { ConnectionStatus, DuplexConnection, Frame } from 'rsocket-types';
 export type ServerOptions = {
   address: string,
   eventType?: string,
-  processEvent?: (ev: any) => any
+  processEvent?: (ev: any) => any,
+  debug : boolean,
 }
 
 /**
@@ -61,7 +54,7 @@ export default class RSocketEventsServer implements TransportServer {
               eventClientConnection.connect();
               subscriber.onNext(eventClientConnection);
             } else {
-              subscriber.error(`unable to create connection - address: ${ this.address }`);
+              subscriber.onError(new Error(`unable to create connection - address: ${ this.address }`));
             }
           });
         }

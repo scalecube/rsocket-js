@@ -1,6 +1,9 @@
 /**
  * written with <3 by scaleCube-js maintainers
  *
+ * RSocketEventsClient Transport provider for event base messages
+ * browser <--> browser
+ *
  * @flow
  */
 
@@ -29,7 +32,8 @@ export default class RSocketEventsClient implements DuplexConnection {
     this._receivers = new Set();
     this._eventsClient = eventClient || new EventsClient({
       confirmConnectionOpenCallback: this.confirmConnectionOpenCallback.bind(this),
-      eventType: 'defaultEventsListener'
+      eventType: 'defaultEventsListener',
+      debug
     });
     this._address = address;
     this._statusSubscribers = new Set();
@@ -64,10 +68,8 @@ export default class RSocketEventsClient implements DuplexConnection {
       return;
     }
     input.subscribe(frame => {
-      if ( __DEV__ ) {
-        if ( this.debug ) {
-          console.log('RSocketEventsClient send frame: ', frame);
-        }
+      if ( this.debug ) {
+        console.log('RSocketEventsClient send frame: ', frame);
       }
       this.connection.send(frame);
     });
@@ -141,10 +143,8 @@ export default class RSocketEventsClient implements DuplexConnection {
 
       this.connection = _eventsClient.connect(this._address);
       this.connection.receive(frame => {
-        if ( __DEV__ ) {
-          if ( this.debug ) {
-            console.log('RSocketEventsClient received frame: ', frame);
-          }
+        if ( this.debug ) {
+          console.log('RSocketEventsClient received frame: ', frame);
         }
         frame && this._receivers.forEach(subscriber => subscriber.onNext(frame));
       });

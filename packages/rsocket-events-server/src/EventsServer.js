@@ -13,6 +13,7 @@ import type { ServerOptions } from './RSocketEventsServer';
 import type { IChannelServer, ChannelOptionsServer, Connection } from './EventsChannelServer';
 
 
+let listeners: IEventListener[] = [];
 /**
  * EventsServer
  * Waiting for client to initiate connection.
@@ -24,7 +25,7 @@ export default class EventsServer {
   eventType: string;
   address: string;
   _getEventData: Function;
-  _listeners: IEventListener[];
+
   _onConnection: Function;
   _clientChannelPort: MessagePort | null;
   debug: boolean = false;
@@ -35,9 +36,9 @@ export default class EventsServer {
     this.debug = option.debug;
     this._getEventData = option.processEvent || (data => (data.type === this.eventType) ? data.detail : null);
 
-    this._listeners = updateListeners({
+    listeners = updateListeners({
       func: this._handler,
-      listeners: this._listeners,
+      listeners,
       type: this.eventType,
       scope: 'global'
     });
@@ -47,7 +48,7 @@ export default class EventsServer {
 
   _handler(ev) {
     const event = this._getEventData(ev.data);
-    if ( !event || event.address !== this.address || event.type !== 'open' ) {
+    if ( !event || event.address !== this.address || event.type !== 'rsocket-events-open-connection' ) {
       return;
     }
 
@@ -55,18 +56,17 @@ export default class EventsServer {
       this._clientChannelPort = ev.ports[0];
       this._clientChannelPort.postMessage({ type: 'connect' });
 
-      this._listeners = updateListeners({
+      listeners = updateListeners({
         func: connectionHandler,
-        listeners: this._listeners,
+        listeners,
         type: 'message',
         scope: 'port'
       });
 
-      this._clientChannelPort.addEventListener('message', (ev) => connectionHandler(ev, this.onStop.bind(this)));
-      this._clientChannelPort.start();
+      this._clientChannelPort && this._clientChannelPort.addEventListener('message', (ev) => connectionHandler(ev, this.onStop.bind(this)));
+      this._clientChannelPort && this._clientChannelPort.start();
       this._onConnection(new ServerChannel({
         clientChannelPort: this._clientChannelPort || new MessagePort(),
-        listeners: this._listeners,
         debug: this.debug
       }));
     }
@@ -90,12 +90,10 @@ export default class EventsServer {
  */
 class ServerChannel implements IChannelServer {
   clientChannelPort: MessagePort;
-  _listeners: IEventListener[];
   debug: boolean;
 
-  constructor({ clientChannelPort, listeners, debug }: ChannelOptionsServer) {
+  constructor({ clientChannelPort, debug }: ChannelOptionsServer) {
     this.clientChannelPort = clientChannelPort;
-    this._listeners = listeners || [];
     this.debug = debug || false;
   }
 
@@ -103,7 +101,7 @@ class ServerChannel implements IChannelServer {
     return {
       disconnect: () => {
         this.clientChannelPort.postMessage(newMessage({ payload: null, type: 'disconnect' }));
-        this._listeners.forEach(({ func, type, scope }) => scope === 'port' ?
+        listeners.forEach(({ func, type, scope }) => scope === 'port' ?
           this.clientChannelPort.removeEventListener(type, func) :
           // $FlowFixMe
           removeEventListener(type, func)
@@ -111,9 +109,9 @@ class ServerChannel implements IChannelServer {
       },
       receive: cb => {
 
-        this._listeners = updateListeners({
+        listeners = updateListeners({
           func: requestMessage,
-          listeners: this._listeners,
+          listeners,
           type: 'message',
           scope: 'port'
         });

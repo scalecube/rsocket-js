@@ -3,7 +3,7 @@
  */
 
 
-import { getMessageData, newMessage, updateListeners } from './utils';
+import { genericPostMessage, getMessageData, newMessage, updateListeners } from './utils';
 import type { IEventListener } from './utils';
 import type { IChannelClient, ChannelOptionsClient, Connection } from './EventsChannelClient';
 
@@ -13,6 +13,9 @@ import type { IChannelClient, ChannelOptionsClient, Connection } from './EventsC
  * initiate connection with a server.
  *
  */
+
+let listeners: IEventListener[] = [];
+
 export default class EventsClient implements IChannelClient {
   eventType: string;
   confirmConnectionOpenCallback: Function | void;
@@ -27,7 +30,7 @@ export default class EventsClient implements IChannelClient {
   connect(address: string): Connection {
 
     let channel: MessageChannel | null = new MessageChannel();
-    let listeners: IEventListener[];
+
 
     if ( !channel ) {
       throw new Error('MessageChannel not supported');
@@ -55,6 +58,14 @@ export default class EventsClient implements IChannelClient {
             payload: null,
             type: 'close'
           }));
+
+          Array.isArray(listeners) &&
+          listeners.forEach(({ type, func, scope }) =>
+            scope === 'port' ?
+              port1 && port1.removeEventListener(type, func) :
+              // $FlowFixMe
+              removeEventListener(type, func));
+
         },
         receive: cb => {
 
@@ -86,14 +97,13 @@ export default class EventsClient implements IChannelClient {
 }
 
 const pingServer = (type, channel, address) => {
-  // $FlowFixMe
-  typeof postMessage === 'function' && postMessage({ // eslint-disable-line
+  genericPostMessage({
     detail: {
       address,
-      type: 'open'
+      type: 'rsocket-events-open-connection'
     },
     type
-  }, '*', [channel.port2]);
+  }, [channel.port2]);
 };
 
 const startListen = (channel, confirmConnectionOpenCallback) => {
@@ -113,14 +123,13 @@ const initConnection = (eventMsg, channel, confirmConnectionOpenCallback, port1)
     }
     case 'disconnect': {
       if ( channel ) {
-        port1.close();
+        port1 && port1.close();
 
         Array.isArray(listeners) &&
         listeners.forEach(({ type, func, scope }) =>
-          scope === 'port' ?
-            port1.removeEventListener(type, func) :
-            // $FlowFixMe
-            removeEventListener(type, func));
+          scope === 'port' &&
+          port1 &&
+          port1.removeEventListener(type, func));
 
         port1 = null;
         channel = null;

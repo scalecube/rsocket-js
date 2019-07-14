@@ -14,8 +14,8 @@ export const newMessage = ({ type, payload }: NewMessageOptions) =>
 export const getMessageData = ({ data }: { data?: any }): any =>
   data || null;
 
-export const updateListeners = ({ listeners = [], type, func }: UpdateListenersOptions) => (type && func) ?
-  [...listeners, { func, type }] :
+export const updateListeners = ({ listeners = [], type, func, scope }: UpdateListenersOptions) => (type && func) ?
+  [...listeners, { func, type, scope }] :
   [...listeners];
 
 

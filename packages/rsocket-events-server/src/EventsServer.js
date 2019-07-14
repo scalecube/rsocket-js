@@ -38,7 +38,8 @@ export default class EventsServer {
     this._listeners = updateListeners({
       func: this._handler,
       listeners: this._listeners,
-      type: this.eventType
+      type: this.eventType,
+      scope: 'global'
     });
     // $FlowFixMe
     typeof addEventListener === 'function' && addEventListener('message', this._handler.bind(this)); // eslint-disable-line
@@ -57,7 +58,8 @@ export default class EventsServer {
       this._listeners = updateListeners({
         func: connectionHandler,
         listeners: this._listeners,
-        type: 'message'
+        type: 'message',
+        scope: 'port'
       });
 
       this._clientChannelPort.addEventListener('message', (ev) => connectionHandler(ev, this.onStop.bind(this)));
@@ -101,14 +103,19 @@ class ServerChannel implements IChannelServer {
     return {
       disconnect: () => {
         this.clientChannelPort.postMessage(newMessage({ payload: null, type: 'disconnect' }));
-        this._listeners.forEach(({ func, type }) => this.clientChannelPort.removeEventListener(type, func));
+        this._listeners.forEach(({ func, type, scope }) => scope === 'port' ?
+          this.clientChannelPort.removeEventListener(type, func) :
+          // $FlowFixMe
+          removeEventListener(type, func)
+        );
       },
       receive: cb => {
 
         this._listeners = updateListeners({
           func: requestMessage,
           listeners: this._listeners,
-          type: 'message'
+          type: 'message',
+          scope: 'port'
         });
         this.clientChannelPort.addEventListener('message', (eventMsg) => requestMessage(eventMsg, cb, this.debug));
       },

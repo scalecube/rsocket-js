@@ -38,7 +38,8 @@ export default class EventsClient implements IChannelClient {
 
     listeners = updateListeners({
       func: initConnection,
-      type: 'message'
+      type: 'message',
+      scope: 'port'
     });
 
     // start to listen to the port
@@ -60,7 +61,8 @@ export default class EventsClient implements IChannelClient {
           listeners = updateListeners({
             func: responseMessage,
             listeners,
-            type: 'message'
+            type: 'message',
+            scope: 'port'
           });
 
           port1.addEventListener('message', (eventMsg) => responseMessage(eventMsg, this.debug, cb));
@@ -112,7 +114,14 @@ const initConnection = (eventMsg, channel, confirmConnectionOpenCallback, port1)
     case 'disconnect': {
       if ( channel ) {
         port1.close();
-        Array.isArray(listeners) && listeners.forEach(({ type, func }) => port1.removeEventListener(type, func));
+
+        Array.isArray(listeners) &&
+        listeners.forEach(({ type, func, scope }) =>
+          scope === 'port' ?
+            port1.removeEventListener(type, func) :
+            // $FlowFixMe
+            removeEventListener(type, func));
+
         port1 = null;
         channel = null;
       }

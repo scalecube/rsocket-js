@@ -22,13 +22,12 @@ export default class EventsClient implements IChannelClient {
   debug: boolean;
 
   constructor(option: ChannelOptionsClient) {
-    this.eventType = option.eventType || 'defaultEventsListener';
+    this.eventType = option.eventType || 'RsocketEvents';
     this.confirmConnectionOpenCallback = option.confirmConnectionOpenCallback;
     this.debug = option.debug || false;
   }
 
   connect(address: string): Connection {
-
     let channel: MessageChannel | null = new MessageChannel();
 
 

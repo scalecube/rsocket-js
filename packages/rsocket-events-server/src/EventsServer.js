@@ -4,7 +4,8 @@
 import {
   newMessage,
   getMessageData,
-  updateListeners
+  updateListeners,
+  setLocalAddress
 } from 'rsocket-events-client';
 
 import type { IEventListener } from 'rsocket-events-client';
@@ -31,10 +32,12 @@ export default class EventsServer {
   debug: boolean = false;
 
   constructor(option: ServerOptions) {
-    this.eventType = option.eventType || 'defaultEventsListener';
+    this.eventType = option.eventType || 'RsocketEvents';
     this.address = option.address;
     this.debug = option.debug;
     this._getEventData = option.processEvent || (data => (data.type === this.eventType) ? data.detail : null);
+
+    setLocalAddress(address);
 
     listeners = updateListeners({
       func: this._handler,

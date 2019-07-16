@@ -37,6 +37,13 @@ interface NewMessageOptions {
   type?: string,
 }
 
+let localAddress : any[] = [];
+
+export const setLocalAddress = (address : string) => {
+  localAddress = [...localAddress, address];
+  return localAddress;
+};
+
 
 export const genericPostMessage = (data: any, transfer?: any[]) => {
   try {

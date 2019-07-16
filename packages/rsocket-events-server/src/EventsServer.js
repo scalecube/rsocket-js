@@ -37,7 +37,7 @@ export default class EventsServer {
     this.debug = option.debug;
     this._getEventData = option.processEvent || (data => (data.type === this.eventType) ? data.detail : null);
 
-    setLocalAddress(address);
+    setLocalAddress(this.address);
 
     listeners = updateListeners({
       func: this._handler,

@@ -37,19 +37,12 @@ interface NewMessageOptions {
   type?: string,
 }
 
-let localAddress : any[] = [];
-
-export const setLocalAddress = (address : string) => {
-  localAddress = [...localAddress, address];
-  return localAddress;
-};
-
 
 export const genericPostMessage = (data: any, transfer?: any[]) => {
   try {
     // $FlowFixMe
     if ( typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope ) {
-      if (localAddress.indexOf(data.detail.to) > -1){
+      if (localAddress.indexOf(data.detail.address) > -1){
         const event = new MessageEvent('message', {
           data,
           ports: transfer ? transfer : undefined,

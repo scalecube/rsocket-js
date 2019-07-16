@@ -32,7 +32,7 @@ export default class RSocketEventsClient implements DuplexConnection {
     this._receivers = new Set();
     this._eventsClient = eventClient || new EventsClient({
       confirmConnectionOpenCallback: this.confirmConnectionOpenCallback.bind(this),
-      eventType: 'defaultEventsListener',
+      eventType: 'RsocketEvents',
       debug
     });
     this._address = address;

@@ -16,8 +16,8 @@
   "dependencies": {
     "fbjs": "^0.8.12",
     "rsocket-core": "^0.0.11",
-    "rsocket-events-client": "^0.0.16-3",
-    "rsocket-events-server": "^0.0.16-3",
+    "rsocket-events-client": "^0.0.16-4",
+    "rsocket-events-server": "^0.0.16-4",
     "rsocket-flowable": "^0.0.11",
     "rsocket-tcp-server": "^0.0.11",
     "rsocket-types": "^0.0.11",

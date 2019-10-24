@@ -1,0 +1,17 @@
+{
+  "name": "rsocket-events-client",
+  "description": "RSocket Events client for use in browser environments",
+  "version": "0.0.14",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rsocket/rsocket-js.git"
+  },
+  "license": "MIT",
+  "main": "build/index.js",
+  "dependencies": {
+    "fbjs": "^0.8.12",
+    "rsocket-core": "^0.0.10",
+    "rsocket-flowable": "^0.0.10",
+    "rsocket-types": "^0.0.10"
+  }
+}

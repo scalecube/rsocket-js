@@ -222,6 +222,44 @@ export function serializeFrame(frame: Frame, encoders?: ?Encoders<*>): Buffer {
       );
   }
 }
+/**
+ * Byte size of frame without size prefix
+ */
+export function sizeOfFrame(frame: Frame, encoders?: ?Encoders<*>): number {
+  encoders = encoders || Utf8Encoders;
+  switch (frame.type) {
+    case FRAME_TYPES.SETUP:
+      return sizeOfSetupFrame(frame, encoders);
+    case FRAME_TYPES.PAYLOAD:
+      return sizeOfPayloadFrame(frame, encoders);
+    case FRAME_TYPES.ERROR:
+      return sizeOfErrorFrame(frame, encoders);
+    case FRAME_TYPES.KEEPALIVE:
+      return sizeOfKeepAliveFrame(frame, encoders);
+    case FRAME_TYPES.REQUEST_FNF:
+    case FRAME_TYPES.REQUEST_RESPONSE:
+      return sizeOfRequestFrame(frame, encoders);
+    case FRAME_TYPES.REQUEST_STREAM:
+    case FRAME_TYPES.REQUEST_CHANNEL:
+      return sizeOfRequestManyFrame(frame, encoders);
+    case FRAME_TYPES.REQUEST_N:
+      return sizeOfRequestNFrame(frame, encoders);
+    case FRAME_TYPES.RESUME:
+      return sizeOfResumeFrame(frame, encoders);
+    case FRAME_TYPES.RESUME_OK:
+      return sizeOfResumeOkFrame(frame, encoders);
+    case FRAME_TYPES.CANCEL:
+      return sizeOfCancelFrame(frame, encoders);
+    case FRAME_TYPES.LEASE:
+      return sizeOfLeaseFrame(frame, encoders);
+    default:
+      invariant(
+        false,
+        'RSocketBinaryFraming: Unsupported frame type `%s`.',
+        getFrameTypeName(frame.type),
+      );
+  }
+}
 
 /**
  * Writes a SETUP frame into a new buffer and returns it.
@@ -295,6 +333,25 @@ function serializeSetupFrame(frame: SetupFrame, encoders: Encoders<*>): Buffer {
   return buffer;
 }
 
+function sizeOfSetupFrame(frame: SetupFrame, encoders: Encoders<*>): number {
+  const resumeTokenLength = frame.resumeToken != null
+    ? encoders.resumeToken.byteLength(frame.resumeToken)
+    : 0;
+  const metadataMimeTypeLength = frame.metadataMimeType != null
+    ? encoders.metadataMimeType.byteLength(frame.metadataMimeType)
+    : 0;
+  const dataMimeTypeLength = frame.dataMimeType != null
+    ? encoders.dataMimeType.byteLength(frame.dataMimeType)
+    : 0;
+  const payloadLength = getPayloadLength(frame, encoders);
+  return FRAME_HEADER_SIZE +
+    SETUP_FIXED_SIZE + //
+    (resumeTokenLength ? RESUME_TOKEN_LENGTH_SIZE + resumeTokenLength : 0) +
+    metadataMimeTypeLength +
+    dataMimeTypeLength +
+    payloadLength;
+}
+
 /**
  * Reads a SETUP frame from the buffer and returns it.
  */
@@ -308,7 +365,7 @@ function deserializeSetupFrame(
     streamId === 0,
     'RSocketBinaryFraming: Invalid SETUP frame, expected stream id to be 0.',
   );
-
+  const length = buffer.length;
   let offset = FRAME_HEADER_SIZE;
   const majorVersion = buffer.readUInt16BE(offset);
   offset += 2;
@@ -377,6 +434,7 @@ function deserializeSetupFrame(
     dataMimeType,
     flags,
     keepAlive,
+    length,
     lifetime,
     majorVersion,
     metadata: null,
@@ -416,6 +474,13 @@ function serializeErrorFrame(frame: ErrorFrame, encoders: Encoders<*>): Buffer {
   return buffer;
 }
 
+function sizeOfErrorFrame(frame: ErrorFrame, encoders: Encoders<*>): number {
+  const messageLength = frame.message != null
+    ? encoders.message.byteLength(frame.message)
+    : 0;
+  return FRAME_HEADER_SIZE + ERROR_FIXED_SIZE + messageLength;
+}
+
 /**
  * Reads an ERROR frame from the buffer and returns it.
  */
@@ -425,6 +490,7 @@ function deserializeErrorFrame(
   flags: number,
   encoders: Encoders<*>,
 ): ErrorFrame {
+  const length = buffer.length;
   let offset = FRAME_HEADER_SIZE;
   const code = buffer.readInt32BE(offset);
   offset += 4;
@@ -444,6 +510,7 @@ function deserializeErrorFrame(
   return {
     code,
     flags,
+    length,
     message,
     streamId,
     type: FRAME_TYPES.ERROR,
@@ -474,6 +541,16 @@ function serializeKeepAliveFrame(
   return buffer;
 }
 
+function sizeOfKeepAliveFrame(
+  frame: KeepAliveFrame,
+  encoders: Encoders<*>,
+): number {
+  const dataLength = frame.data != null
+    ? encoders.data.byteLength(frame.data)
+    : 0;
+  return FRAME_HEADER_SIZE + KEEPALIVE_FIXED_SIZE + dataLength;
+}
+
 /**
  * Reads a KEEPALIVE frame from the buffer and returns it.
  */
@@ -487,7 +564,7 @@ function deserializeKeepAliveFrame(
     streamId === 0,
     'RSocketBinaryFraming: Invalid KEEPALIVE frame, expected stream id to be 0.',
   );
-
+  const length = buffer.length;
   let offset = FRAME_HEADER_SIZE;
   const lastReceivedPosition = readUInt64BE(buffer, offset);
   offset += 8;
@@ -500,6 +577,7 @@ function deserializeKeepAliveFrame(
     data,
     flags,
     lastReceivedPosition,
+    length,
     streamId,
     type: FRAME_TYPES.KEEPALIVE,
   };
@@ -532,6 +610,13 @@ function serializeLeaseFrame(frame: LeaseFrame, encoders: Encoders<*>): Buffer {
   return buffer;
 }
 
+function sizeOfLeaseFrame(frame: LeaseFrame, encoders: Encoders<*>): number {
+  const metaLength = frame.metadata != null
+    ? encoders.metadata.byteLength(frame.metadata)
+    : 0;
+  return FRAME_HEADER_SIZE + LEASE_FIXED_SIZE + metaLength;
+}
+
 /**
  * Reads a LEASE frame from the buffer and returns it.
  */
@@ -545,7 +630,7 @@ function deserializeLeaseFrame(
     streamId === 0,
     'RSocketBinaryFraming: Invalid LEASE frame, expected stream id to be 0.',
   );
-
+  const length = buffer.length;
   let offset = FRAME_HEADER_SIZE;
   const ttl = buffer.readUInt32BE(offset);
   offset += 4;
@@ -557,6 +642,7 @@ function deserializeLeaseFrame(
   }
   return {
     flags,
+    length,
     metadata,
     requestCount,
     streamId,
@@ -582,6 +668,14 @@ function serializeRequestFrame(
   return buffer;
 }
 
+function sizeOfRequestFrame(
+  frame: RequestFnfFrame | RequestResponseFrame,
+  encoders: Encoders<*>,
+): number {
+  const payloadLength = getPayloadLength(frame, encoders);
+  return FRAME_HEADER_SIZE + payloadLength;
+}
+
 function deserializeRequestFnfFrame(
   buffer: Buffer,
   streamId: number,
@@ -592,9 +686,11 @@ function deserializeRequestFnfFrame(
     streamId > 0,
     'RSocketBinaryFraming: Invalid REQUEST_FNF frame, expected stream id to be > 0.',
   );
+  const length = buffer.length;
   const frame: RequestFnfFrame = {
     data: null,
     flags,
+    length,
     metadata: null,
     streamId,
     type: FRAME_TYPES.REQUEST_FNF,
@@ -613,9 +709,11 @@ function deserializeRequestResponseFrame(
     streamId > 0,
     'RSocketBinaryFraming: Invalid REQUEST_RESPONSE frame, expected stream id to be > 0.',
   );
+  const length = buffer.length;
   const frame: RequestResponseFrame = {
     data: null,
     flags,
+    length,
     metadata: null,
     streamId,
     type: FRAME_TYPES.REQUEST_RESPONSE,
@@ -647,6 +745,14 @@ function serializeRequestManyFrame(
   return buffer;
 }
 
+function sizeOfRequestManyFrame(
+  frame: RequestStreamFrame | RequestChannelFrame,
+  encoders: Encoders<*>,
+): number {
+  const payloadLength = getPayloadLength(frame, encoders);
+  return FRAME_HEADER_SIZE + REQUEST_MANY_HEADER + payloadLength;
+}
+
 function deserializeRequestStreamFrame(
   buffer: Buffer,
   streamId: number,
@@ -657,6 +763,7 @@ function deserializeRequestStreamFrame(
     streamId > 0,
     'RSocketBinaryFraming: Invalid REQUEST_STREAM frame, expected stream id to be > 0.',
   );
+  const length = buffer.length;
   let offset = FRAME_HEADER_SIZE;
   const requestN = buffer.readInt32BE(offset);
   offset += 4;
@@ -668,6 +775,7 @@ function deserializeRequestStreamFrame(
   const frame: RequestStreamFrame = {
     data: null,
     flags,
+    length,
     metadata: null,
     requestN,
     streamId,
@@ -687,6 +795,7 @@ function deserializeRequestChannelFrame(
     streamId > 0,
     'RSocketBinaryFraming: Invalid REQUEST_CHANNEL frame, expected stream id to be > 0.',
   );
+  const length = buffer.length;
   let offset = FRAME_HEADER_SIZE;
   const requestN = buffer.readInt32BE(offset);
   offset += 4;
@@ -698,6 +807,7 @@ function deserializeRequestChannelFrame(
   const frame: RequestChannelFrame = {
     data: null,
     flags,
+    length,
     metadata: null,
     requestN,
     streamId,
@@ -723,6 +833,13 @@ function serializeRequestNFrame(
   return buffer;
 }
 
+function sizeOfRequestNFrame(
+  frame: RequestNFrame,
+  encoders: Encoders<*>,
+): number {
+  return FRAME_HEADER_SIZE + REQUEST_N_HEADER;
+}
+
 function deserializeRequestNFrame(
   buffer: Buffer,
   streamId: number,
@@ -733,6 +850,7 @@ function deserializeRequestNFrame(
     streamId > 0,
     'RSocketBinaryFraming: Invalid REQUEST_N frame, expected stream id to be > 0.',
   );
+  const length = buffer.length;
   const requestN = buffer.readInt32BE(FRAME_HEADER_SIZE);
   invariant(
     requestN > 0,
@@ -741,6 +859,7 @@ function deserializeRequestNFrame(
   );
   return {
     flags,
+    length,
     requestN,
     streamId,
     type: FRAME_TYPES.REQUEST_N,
@@ -759,6 +878,10 @@ function serializeCancelFrame(
   return buffer;
 }
 
+function sizeOfCancelFrame(frame: CancelFrame, encoders: Encoders<*>): number {
+  return FRAME_HEADER_SIZE;
+}
+
 function deserializeCancelFrame(
   buffer: Buffer,
   streamId: number,
@@ -769,8 +892,10 @@ function deserializeCancelFrame(
     streamId > 0,
     'RSocketBinaryFraming: Invalid CANCEL frame, expected stream id to be > 0.',
   );
+  const length = buffer.length;
   return {
     flags,
+    length,
     streamId,
     type: FRAME_TYPES.CANCEL,
   };
@@ -790,6 +915,14 @@ function serializePayloadFrame(
   return buffer;
 }
 
+function sizeOfPayloadFrame(
+  frame: PayloadFrame,
+  encoders: Encoders<*>,
+): number {
+  const payloadLength = getPayloadLength(frame, encoders);
+  return FRAME_HEADER_SIZE + payloadLength;
+}
+
 function deserializePayloadFrame(
   buffer: Buffer,
   streamId: number,
@@ -800,9 +933,11 @@ function deserializePayloadFrame(
     streamId > 0,
     'RSocketBinaryFraming: Invalid PAYLOAD frame, expected stream id to be > 0.',
   );
+  const length = buffer.length;
   const frame: PayloadFrame = {
     data: null,
     flags,
+    length,
     metadata: null,
     streamId,
     type: FRAME_TYPES.PAYLOAD,
@@ -840,9 +975,14 @@ function serializeResumeFrame(
     offset,
     offset + resumeTokenLength,
   );
-  offset = writeUInt64BE(buffer, frame.clientPosition, offset);
-  writeUInt64BE(buffer, frame.serverPosition, offset);
+  offset = writeUInt64BE(buffer, frame.serverPosition, offset);
+  writeUInt64BE(buffer, frame.clientPosition, offset);
   return buffer;
+}
+
+function sizeOfResumeFrame(frame: ResumeFrame, encoders: Encoders<*>): number {
+  const resumeTokenLength = encoders.resumeToken.byteLength(frame.resumeToken);
+  return FRAME_HEADER_SIZE + RESUME_FIXED_SIZE + resumeTokenLength;
 }
 
 function deserializeResumeFrame(
@@ -855,7 +995,7 @@ function deserializeResumeFrame(
     streamId === 0,
     'RSocketBinaryFraming: Invalid RESUME frame, expected stream id to be 0.',
   );
-
+  const length = buffer.length;
   let offset = FRAME_HEADER_SIZE;
   const majorVersion = buffer.readUInt16BE(offset);
   offset += 2;
@@ -877,13 +1017,14 @@ function deserializeResumeFrame(
     offset + resumeTokenLength,
   );
   offset += resumeTokenLength;
-  const clientPosition = readUInt64BE(buffer, offset);
-  offset += 8;
   const serverPosition = readUInt64BE(buffer, offset);
+  offset += 8;
+  const clientPosition = readUInt64BE(buffer, offset);
   offset += 8;
   return {
     clientPosition,
     flags,
+    length,
     majorVersion,
     minorVersion,
     resumeToken,
@@ -910,6 +1051,13 @@ function serializeResumeOkFrame(
   return buffer;
 }
 
+function sizeOfResumeOkFrame(
+  frame: ResumeOkFrame,
+  encoders: Encoders<*>,
+): number {
+  return FRAME_HEADER_SIZE + RESUME_OK_FIXED_SIZE;
+}
+
 function deserializeResumeOkFrame(
   buffer: Buffer,
   streamId: number,
@@ -920,11 +1068,12 @@ function deserializeResumeOkFrame(
     streamId === 0,
     'RSocketBinaryFraming: Invalid RESUME frame, expected stream id to be 0.',
   );
-
+  const length = buffer.length;
   const clientPosition = readUInt64BE(buffer, FRAME_HEADER_SIZE);
   return {
     clientPosition,
     flags,
+    length,
     streamId,
     type: FRAME_TYPES.RESUME_OK,
   };

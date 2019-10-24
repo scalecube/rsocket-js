@@ -64,7 +64,69 @@ describe('RSocketClient', () => {
       expect(transport.sendOne.mock.calls.length).toBe(1);
       expect(transport.sendOne.mock.frame).toEqual({
         type: FRAME_TYPES.SETUP,
+        dataMimeType: '<dataMimeType>',
+        flags: 0,
+        keepAlive: 42,
+        lifetime: 2017,
+        metadata: undefined,
+        metadataMimeType: '<metadataMimeType>',
+        resumeToken: null,
+        streamId: 0,
+        majorVersion: 1,
+        minorVersion: 0,
+      });
+    });
+
+    it('sends the setup frame with metadata', () => {
+      const transport = genMockConnection();
+      const client = new RSocketClient({
+        setup: {
+          dataMimeType: '<dataMimeType>',
+          keepAlive: 42,
+          lifetime: 2017,
+          metadata: '<metadata>',
+          metadataMimeType: '<metadataMimeType>',
+        },
+        transport,
+      });
+      client.connect().subscribe();
+      transport.mock.connect();
+      expect(transport.sendOne.mock.calls.length).toBe(1);
+      expect(transport.sendOne.mock.frame).toEqual({
+        type: FRAME_TYPES.SETUP,
         data: undefined,
+        dataMimeType: '<dataMimeType>',
+        flags: 256,
+        keepAlive: 42,
+        lifetime: 2017,
+        metadata: '<metadata>',
+        metadataMimeType: '<metadataMimeType>',
+        resumeToken: null,
+        streamId: 0,
+        majorVersion: 1,
+        minorVersion: 0,
+      });
+    });
+
+    it('sends the setup frame with data', () => {
+      const transport = genMockConnection();
+      const payload = JSON.stringify({one: 42, two: {embedded: 'myvalue'}});
+      const client = new RSocketClient({
+        setup: {
+          dataMimeType: '<dataMimeType>',
+          keepAlive: 42,
+          lifetime: 2017,
+          metadataMimeType: '<metadataMimeType>',
+          data: '<data>',
+        },
+        transport,
+      });
+      client.connect().subscribe();
+      transport.mock.connect();
+      expect(transport.sendOne.mock.calls.length).toBe(1);
+      expect(transport.sendOne.mock.frame).toEqual({
+        type: FRAME_TYPES.SETUP,
+        data: '<data>',
         dataMimeType: '<dataMimeType>',
         flags: 0,
         keepAlive: 42,

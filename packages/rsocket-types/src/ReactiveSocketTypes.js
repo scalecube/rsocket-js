@@ -76,6 +76,12 @@ export interface ReactiveSocket<D, M> extends Responder<D, M> {
    * Implementations must publish values per the comments on ConnectionStatus.
    */
   connectionStatus(): Flowable<ConnectionStatus>,
+
+  /**
+   * Returns positive number representing the availability of RSocket requester. Higher is better, 0.0
+   * means not available.
+   */
+  availability(): number,
 }
 
 /**
@@ -194,6 +200,7 @@ export type CancelFrame = {|
   type: 0x09,
   flags: number,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type ErrorFrame = {|
@@ -202,6 +209,7 @@ export type ErrorFrame = {|
   code: number,
   message: string,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type KeepAliveFrame = {|
@@ -210,6 +218,7 @@ export type KeepAliveFrame = {|
   data: ?Encodable,
   lastReceivedPosition: number,
   streamId: 0,
+  length?: number,
 |};
 // prettier-ignore
 export type LeaseFrame = {|
@@ -219,6 +228,7 @@ export type LeaseFrame = {|
   requestCount: number,
   metadata: ?Encodable,
   streamId: 0,
+  length?: number,
 |};
 // prettier-ignore
 export type PayloadFrame = {|
@@ -227,6 +237,7 @@ export type PayloadFrame = {|
   data: ?Encodable,
   metadata: ?Encodable,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type RequestChannelFrame = {|
@@ -236,6 +247,7 @@ export type RequestChannelFrame = {|
   flags: number,
   requestN: number,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type RequestFnfFrame = {|
@@ -244,6 +256,7 @@ export type RequestFnfFrame = {|
   metadata: ?Encodable,
   flags: number,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type RequestNFrame = {|
@@ -251,6 +264,7 @@ export type RequestNFrame = {|
   flags: number,
   requestN: number,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type RequestResponseFrame = {|
@@ -259,6 +273,7 @@ export type RequestResponseFrame = {|
   metadata: ?Encodable,
   flags: number,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type RequestStreamFrame = {|
@@ -268,6 +283,7 @@ export type RequestStreamFrame = {|
   flags: number,
   requestN: number,
   streamId: number,
+  length?: number,
 |};
 // prettier-ignore
 export type ResumeFrame = {|
@@ -279,6 +295,7 @@ export type ResumeFrame = {|
   resumeToken: Encodable,
   serverPosition: number,
   streamId: 0,
+  length?: number,
 |};
 // prettier-ignore
 export type ResumeOkFrame = {|
@@ -286,6 +303,7 @@ export type ResumeOkFrame = {|
   clientPosition: number,
   flags: number,
   streamId: 0,
+  length?: number,
 |};
 // prettier-ignore
 export type SetupFrame = {|
@@ -301,10 +319,12 @@ export type SetupFrame = {|
   streamId: 0,
   majorVersion: number,
   minorVersion: number,
+  length?: number,
 |};
 // prettier-ignore
 export type UnsupportedFrame = {|
   type: 0x3f | 0x0c | 0x00,
   streamId: 0,
   flags: number,
+  length?: number,
 |};

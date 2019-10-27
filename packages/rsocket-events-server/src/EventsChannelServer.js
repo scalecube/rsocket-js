@@ -14,7 +14,7 @@ export interface Connection {
 export interface ChannelOptionsServer {
   clientChannelPort: MessagePort,
   listeners?: IEventListener[],
-  debug ?: boolean | null,
+  debug?: boolean | null,
 }
 
 export interface IChannelServer {

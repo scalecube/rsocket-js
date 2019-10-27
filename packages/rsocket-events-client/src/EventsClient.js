@@ -2,10 +2,18 @@
  * @flow
  */
 
-
-import { genericPostMessage, getMessageData, newMessage, updateListeners } from './utils';
-import type { IEventListener } from './utils';
-import type { IChannelClient, ChannelOptionsClient, Connection } from './EventsChannelClient';
+import {
+  genericPostMessage,
+  getMessageData,
+  newMessage,
+  updateListeners,
+} from './utils';
+import type {IEventListener} from './utils';
+import type {
+  IChannelClient,
+  ChannelOptionsClient,
+  Connection,
+} from './EventsChannelClient';
 
 /**
  * EventsClient implements IChannelClient
@@ -30,8 +38,7 @@ export default class EventsClient implements IChannelClient {
   connect(address: string): Connection {
     let channel: MessageChannel | null = new MessageChannel();
 
-
-    if ( !channel ) {
+    if (!channel) {
       throw new Error('MessageChannel not supported');
     }
 
@@ -41,53 +48,58 @@ export default class EventsClient implements IChannelClient {
     listeners = updateListeners({
       func: initConnection,
       type: 'message',
-      scope: 'port'
+      scope: 'port',
     });
 
     // start to listen to the port
     startListen(channel, this.confirmConnectionOpenCallback);
 
-
-    if ( channel && channel.port1 ) {
-      const { port1 } = channel;
+    if (channel && channel.port1) {
+      const {port1} = channel;
 
       return Object.freeze({
         disconnect: () => {
-          port1.postMessage(newMessage({
-            payload: null,
-            type: 'close'
-          }));
+          port1.postMessage(
+            newMessage({
+              payload: null,
+              type: 'close',
+            }),
+          );
 
           Array.isArray(listeners) &&
-          listeners.forEach(({ type, func, scope }) =>
-            scope === 'port' ?
-              port1 && port1.removeEventListener(type, func) :
-              // $FlowFixMe
-              removeEventListener(type, func));
-
+            listeners.forEach(
+              ({type, func, scope}) =>
+                scope === 'port'
+                  ? port1 && port1.removeEventListener(type, func)
+                  : // $FlowFixMe
+                    removeEventListener(type, func),
+            );
         },
         receive: cb => {
-
           listeners = updateListeners({
             func: responseMessage,
             listeners,
             type: 'message',
-            scope: 'port'
+            scope: 'port',
           });
 
-          port1.addEventListener('message', (eventMsg) => responseMessage(eventMsg, this.debug, cb));
+          port1.addEventListener('message', eventMsg =>
+            responseMessage(eventMsg, this.debug, cb));
         },
         send: msg => {
-
-          if ( this.debug ) {
-            console.log(`Client send request with payload: ${ JSON.stringify(msg) }`);
+          if (this.debug) {
+            console.log(
+              `Client send request with payload: ${JSON.stringify(msg)}`,
+            );
           }
 
-          port1.postMessage(newMessage({
-            payload: msg,
-            type: 'request'
-          }));
-        }
+          port1.postMessage(
+            newMessage({
+              payload: msg,
+              type: 'request',
+            }),
+          );
+        },
       });
     } else {
       throw new Error('Unable to use port message');
@@ -96,39 +108,51 @@ export default class EventsClient implements IChannelClient {
 }
 
 const pingServer = (type, channel, address) => {
-  genericPostMessage({
-    detail: {
-      address,
-      type: 'rsocket-events-open-connection'
+  genericPostMessage(
+    {
+      detail: {
+        address,
+        type: 'rsocket-events-open-connection',
+      },
+      type,
     },
-    type
-  }, [channel.port2]);
+    [channel.port2],
+  );
 };
 
 const startListen = (channel, confirmConnectionOpenCallback) => {
-  if ( channel && channel.port1 ) {
-    const { port1 } = channel;
-    port1.addEventListener('message', (eventMsg) => initConnection(eventMsg, channel, confirmConnectionOpenCallback, port1));
+  if (channel && channel.port1) {
+    const {port1} = channel;
+    port1.addEventListener('message', eventMsg =>
+      initConnection(eventMsg, channel, confirmConnectionOpenCallback, port1));
     port1.start();
   }
 };
 
-const initConnection = (eventMsg, channel, confirmConnectionOpenCallback, port1) => {
-  const { type } = getMessageData(eventMsg);
-  switch ( type ) {
+const initConnection = (
+  eventMsg,
+  channel,
+  confirmConnectionOpenCallback,
+  port1,
+) => {
+  const {type} = getMessageData(eventMsg);
+  switch (type) {
     case 'connect': {
-      typeof confirmConnectionOpenCallback === 'function' && confirmConnectionOpenCallback();
+      typeof confirmConnectionOpenCallback === 'function' &&
+        confirmConnectionOpenCallback();
       break;
     }
     case 'disconnect': {
-      if ( channel ) {
+      if (channel) {
         port1 && port1.close();
 
         Array.isArray(listeners) &&
-        listeners.forEach(({ type, func, scope }) =>
-          scope === 'port' &&
-          port1 &&
-          port1.removeEventListener(type, func));
+          listeners.forEach(
+            ({type, func, scope}) =>
+              scope === 'port' &&
+              port1 &&
+              port1.removeEventListener(type, func),
+          );
 
         port1 = null;
         channel = null;
@@ -139,10 +163,10 @@ const initConnection = (eventMsg, channel, confirmConnectionOpenCallback, port1)
 };
 
 const responseMessage = (eventMsg, debug, cb) => {
-  const { type, payload } = getMessageData(eventMsg);
-  if ( type === 'response' ) {
-    if ( debug ) {
-      console.log(`Client receive response with payload: ${ payload }`);
+  const {type, payload} = getMessageData(eventMsg);
+  if (type === 'response') {
+    if (debug) {
+      console.log(`Client receive response with payload: ${payload}`);
     }
     cb(payload);
   }

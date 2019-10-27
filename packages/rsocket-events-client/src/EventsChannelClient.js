@@ -13,7 +13,7 @@ export interface Connection {
 export interface ChannelOptionsClient {
   eventType?: string,
   confirmConnectionOpenCallback?: Function,
-  debug ?: boolean | null,
+  debug?: boolean | null,
 }
 
 export interface IChannelClient {

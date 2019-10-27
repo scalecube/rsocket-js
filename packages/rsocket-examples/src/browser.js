@@ -59,32 +59,37 @@ const serverStop = (function serverSide() {
       case 'none':
         return Flowable.never();
       case 'requestResponse':
-        return socket.requestResponse({
-          data: payload,
-          metadata: ''
-        }).then(({ data, metadata }) =>
-          console.log(`response ${ data }`)
-        );
+        return socket
+          .requestResponse({
+            data: payload,
+            metadata: ''
+          })
+          .subscribe(observer);
       case 'requestStream':
-        return socket.requestStream({
-          data: payload,
-          metadata: ''
-        }).subscribe(observer);
+        return socket
+          .requestStream({
+            data: payload,
+            metadata: ''
+          })
+          .subscribe(observerFlow);
       default:
         return null;
     }
   }
-
 })({ address: 'pm://host/path:80', debug: true });
-
 
 const observer = {
   onComplete() {
     console.log('onComplete()');
   },
   onError(error) {
-    console.log('onError(%s)', error.message);
-  },
+    console.log('onError(%s)', error.source.message.data);
+  }
+
+};
+
+const observerFlow = {
+  ...observer,
   onNext(payload) {
     console.log('onNext(%s)', payload.data);
   },
@@ -100,12 +105,21 @@ class SymmetricResponder {
 
   requestResponse(payload) {
     logRequest('requestResponse', payload);
-    return Single.of(make(`${ payload.data } response`));
+    return Single.error(errorFactory({ data: 'requestResponse error test' }));
+    // return Single.error('requestResponse error test');
+
+    // Single.of(make(`${payload.data} response`));
   }
 
   requestStream(payload) {
     logRequest('requestStream', payload);
-    return Flowable.just(make(`${ payload.data } stream1`), make(`${ payload.data } stream2`));
+    return Flowable.error(errorFactory({ data: 'requestStream error test' }));
+    // return  Flowable.error(new Error('requestStream error test'));
+
+    // Flowable.just(
+    //   make(`${payload.data} stream1`),
+    //   make(`${payload.data} stream2`),
+    // );
   }
 
   requestChannel(payloads) {
@@ -123,6 +137,12 @@ function logRequest(type, payload) {
     `${ type } with payload: data: ${ payload.data || 'null' },
       metadata: ${ payload.metadata || 'null' }`
   );
+}
+
+function errorFactory(err) {
+  return {
+    message: err
+  };
 }
 
 function make(data) {

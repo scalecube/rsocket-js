@@ -3,26 +3,23 @@
  * @flow
  */
 
-export const newMessage = ({ type, payload }: NewMessageOptions) =>
-  ({
-    cid: Date.now() + '-' + Math.random(),
-    payload,
-    type
-  });
+export const newMessage = ({type, payload}: NewMessageOptions) => ({
+  cid: Date.now() + '-' + Math.random(),
+  payload,
+  type,
+});
 
 // $FlowFixMe
-export const getMessageData = ({ data }: { data?: any }): any =>
-  data || null;
+export const getMessageData = ({data}: {data?: any}): any => data || null;
 
-export const updateListeners = ({ listeners = [], type, func, scope }: UpdateListenersOptions) => (type && func) ?
-  [...listeners, { func, type, scope }] :
-  [...listeners];
-
+export const updateListeners = (
+  {listeners = [], type, func, scope}: UpdateListenersOptions,
+) => type && func ? [...listeners, {func, type, scope}] : [...listeners];
 
 export interface IEventListener {
   func: (...data: any[]) => any,
   type: string,
-  scope: string
+  scope: string,
 }
 
 interface UpdateListenersOptions {
@@ -37,19 +34,21 @@ interface NewMessageOptions {
   type?: string,
 }
 
-let localAddress : any[] = [];
+let localAddress: any[] = [];
 
-export const setLocalAddress = (address : string) => {
+export const setLocalAddress = (address: string) => {
   localAddress = [...localAddress, address];
   return localAddress;
 };
 
-
 export const genericPostMessage = (data: any, transfer?: any[]) => {
   try {
     // $FlowFixMe
-    if ( typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope ) {
-      if (localAddress.indexOf(data.detail.address) > -1){
+    if (
+      typeof WorkerGlobalScope !== 'undefined' &&
+      self instanceof WorkerGlobalScope
+    ) {
+      if (localAddress.indexOf(data.detail.address) > -1) {
         const event = new MessageEvent('message', {
           data,
           ports: transfer ? transfer : undefined,
@@ -63,7 +62,7 @@ export const genericPostMessage = (data: any, transfer?: any[]) => {
       // $FlowFixMe
       postMessage(data, '*', transfer ? transfer : undefined);
     }
-  } catch ( e ) {
+  } catch (e) {
     console.error('Unable to post message ', e);
   }
 };

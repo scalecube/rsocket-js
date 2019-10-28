@@ -3,29 +3,20 @@
   "private": true,
   "description": "RSocket examples",
   "version": "0.0.15",
-  "main": "src/browser.js",
+  "main": "../rsocket-example-browser/src/browser.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/rsocket/rsocket-js.git"
-  },
-  "scripts": {
-    "build:example": "parcel build -o build ./src/browser.js",
-    "watch:example": "parcel ./events.html"
   },
   "license": "BSD-3-Clause",
   "dependencies": {
     "fbjs": "^0.8.12",
     "rsocket-core": "^0.0.11",
-    "rsocket-events-client": "^0.0.16-6",
-    "rsocket-events-server": "^0.0.16-6",
     "rsocket-flowable": "^0.0.11",
     "rsocket-tcp-server": "^0.0.11",
     "rsocket-types": "^0.0.11",
     "rsocket-websocket-client": "^0.0.11",
     "rsocket-websocket-server": "^0.0.11",
     "ws": "^5.2.1"
-  },
-  "devDependencies": {
-    "parcel": "^1.12.3"
   }
 }

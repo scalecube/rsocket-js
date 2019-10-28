@@ -1,17 +1,33 @@
 {
   "name": "rsocket-events-client",
   "description": "RSocket Events client for use in browser environments",
-  "version": "0.0.16-6",
+  "version": "0.0.16.7",
   "repository": {
     "type": "git",
     "url": "https://github.com/rsocket/rsocket-js.git"
   },
   "license": "MIT",
-  "main": "build/index.js",
+  "files": [
+    "build",
+    "module",
+    "main"
+  ],
+  "build": "build/index.js",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
   "dependencies": {
     "fbjs": "^0.8.12",
-    "rsocket-core": "^0.0.10",
-    "rsocket-flowable": "^0.0.10",
-    "rsocket-types": "^0.0.10"
+    "rsocket-core": "^0.0.16",
+    "rsocket-flowable": "^0.0.14",
+    "rsocket-types": "^0.0.16"
+  },
+  "devDependencies": {
+    "rollup": "^1.25.2",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-visualizer": "^2.6.0"
   }
 }

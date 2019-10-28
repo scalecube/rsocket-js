@@ -32,12 +32,12 @@ export default class EventsServer {
 
   _onConnection: Function;
   _clientChannelPort: MessagePort | null;
-  debug: boolean = false;
+  debug: boolean;
 
   constructor(option: ServerOptions) {
     this.eventType = option.eventType || 'RsocketEvents';
     this.address = option.address;
-    this.debug = option.debug;
+    this.debug = option.debug || false;
     this._getEventData = option.processEvent ||
       (data => data.type === this.eventType ? data.detail : null);
 

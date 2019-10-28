@@ -1,5 +1,37 @@
 import { Flowable } from 'rsocket-flowable';
-import RSocketEventsClient, { setLocalAddress, updateListeners, newMessage, getMessageData } from 'rsocket-events-client';
+import RSocketEventsClient from 'rsocket-events-client';
+
+/**
+ *
+ *      
+ */
+const newMessage = ({
+  type,
+  payload
+}) => ({
+  cid: Date.now() + '-' + Math.random(),
+  payload,
+  type
+}); // $FlowFixMe
+
+const getMessageData = ({
+  data
+}) => data || null;
+const updateListeners = ({
+  listeners = [],
+  type,
+  func,
+  scope
+}) => type && func ? [...listeners, {
+  func,
+  type,
+  scope
+}] : [...listeners];
+let localAddress = [];
+const setLocalAddress = address => {
+  localAddress = [...localAddress, address];
+  return localAddress;
+};
 
 /**
  *      

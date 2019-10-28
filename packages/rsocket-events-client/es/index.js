@@ -29,10 +29,6 @@ const updateListeners = ({
   scope
 }] : [...listeners];
 let localAddress = [];
-const setLocalAddress = address => {
-  localAddress = [...localAddress, address];
-  return localAddress;
-};
 const genericPostMessage = (data, transfer) => {
   try {
     // $FlowFixMe
@@ -402,4 +398,3 @@ class RSocketEventsClient {
  */
 
 export default RSocketEventsClient;
-export { genericPostMessage, getMessageData, newMessage, setLocalAddress, updateListeners };

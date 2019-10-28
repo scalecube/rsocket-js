@@ -6,9 +6,9 @@ import {
   getMessageData,
   updateListeners,
   setLocalAddress,
-} from 'rsocket-events-client';
+} from './utils';
 
-import type {IEventListener} from 'rsocket-events-client';
+import type {IEventListener} from './utils';
 
 import type {ServerOptions} from './RSocketEventsServer';
 import type {

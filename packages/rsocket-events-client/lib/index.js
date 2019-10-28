@@ -1,7 +1,5 @@
 'use strict';
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var rsocketFlowable = require('rsocket-flowable');
@@ -35,10 +33,6 @@ const updateListeners = ({
   scope
 }] : [...listeners];
 let localAddress = [];
-const setLocalAddress = address => {
-  localAddress = [...localAddress, address];
-  return localAddress;
-};
 const genericPostMessage = (data, transfer) => {
   try {
     // $FlowFixMe
@@ -407,9 +401,4 @@ class RSocketEventsClient {
  *      
  */
 
-exports.default = RSocketEventsClient;
-exports.genericPostMessage = genericPostMessage;
-exports.getMessageData = getMessageData;
-exports.newMessage = newMessage;
-exports.setLocalAddress = setLocalAddress;
-exports.updateListeners = updateListeners;
+module.exports = RSocketEventsClient;

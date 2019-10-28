@@ -3,8 +3,39 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var rsocketFlowable = require('rsocket-flowable');
-var RSocketEventsClient = require('rsocket-events-client');
-var RSocketEventsClient__default = _interopDefault(RSocketEventsClient);
+var RSocketEventsClient = _interopDefault(require('rsocket-events-client'));
+
+/**
+ *
+ *      
+ */
+const newMessage = ({
+  type,
+  payload
+}) => ({
+  cid: Date.now() + '-' + Math.random(),
+  payload,
+  type
+}); // $FlowFixMe
+
+const getMessageData = ({
+  data
+}) => data || null;
+const updateListeners = ({
+  listeners = [],
+  type,
+  func,
+  scope
+}) => type && func ? [...listeners, {
+  func,
+  type,
+  scope
+}] : [...listeners];
+let localAddress = [];
+const setLocalAddress = address => {
+  localAddress = [...localAddress, address];
+  return localAddress;
+};
 
 /**
  *      
@@ -26,8 +57,8 @@ class EventsServer {
 
     this._getEventData = option.processEvent || (data => data.type === this.eventType ? data.detail : null);
 
-    RSocketEventsClient.setLocalAddress(this.address);
-    listeners = RSocketEventsClient.updateListeners({
+    setLocalAddress(this.address);
+    listeners = updateListeners({
       func: this._handler,
       listeners,
       type: this.eventType,
@@ -51,7 +82,7 @@ class EventsServer {
         type: 'connect'
       });
 
-      listeners = RSocketEventsClient.updateListeners({
+      listeners = updateListeners({
         func: connectionHandler,
         listeners,
         type: 'message',
@@ -97,7 +128,7 @@ class ServerChannel {
   connect() {
     return {
       disconnect: () => {
-        this.clientChannelPort.postMessage(RSocketEventsClient.newMessage({
+        this.clientChannelPort.postMessage(newMessage({
           payload: null,
           type: 'disconnect'
         }));
@@ -109,7 +140,7 @@ class ServerChannel {
         removeEventListener(type, func));
       },
       receive: cb => {
-        listeners = RSocketEventsClient.updateListeners({
+        listeners = updateListeners({
           func: requestMessage,
           listeners,
           type: 'message',
@@ -122,7 +153,7 @@ class ServerChannel {
           console.log(`Server responses with payload: ${JSON.stringify(msg)}`);
         }
 
-        this.clientChannelPort.postMessage(RSocketEventsClient.newMessage({
+        this.clientChannelPort.postMessage(newMessage({
           payload: msg,
           type: 'response'
         }));
@@ -136,7 +167,7 @@ const requestMessage = (eventMsg, cb, debug) => {
   const {
     payload,
     type
-  } = RSocketEventsClient.getMessageData(eventMsg);
+  } = getMessageData(eventMsg);
 
   if (type === 'request') {
     if (debug) {
@@ -148,7 +179,7 @@ const requestMessage = (eventMsg, cb, debug) => {
 };
 
 const connectionHandler = (ev, onStop) => {
-  const event = RSocketEventsClient.getMessageData(ev);
+  const event = getMessageData(ev);
 
   switch (event.type) {
     case 'close':
@@ -189,7 +220,7 @@ class RSocketEventsServer {
         },
         request: () => {
           this._server.onConnect(eventClient => {
-            const eventClientConnection = new RSocketEventsClient__default({
+            const eventClientConnection = new RSocketEventsClient({
               address: this.address,
               eventClient
             });

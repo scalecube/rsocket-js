@@ -19,6 +19,4 @@
 
 import RSocketEventsClient from './RSocketEventsClient';
 
-export * from './utils';
-
 export default RSocketEventsClient;

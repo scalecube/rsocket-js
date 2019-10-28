@@ -1,7 +1,7 @@
 /**
  * @flow
  */
-import type {IEventListener} from 'rsocket-events-client';
+import type {IEventListener} from './utils';
 
 export interface Connection {
   send(msg: Object): void,

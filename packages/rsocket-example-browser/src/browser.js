@@ -1,7 +1,12 @@
 import RSocketEventsClient from 'rsocket-events-client';
 import RSocketEventsServer from 'rsocket-events-server';
 
-import { MAX_STREAM_ID, RSocketClient, RSocketServer } from 'rsocket-core';
+// import { MAX_STREAM_ID, RSocketClient, RSocketServer } from 'rsocket-core';
+
+import RSocketClient from 'rsocket-core/build/RSocketClient';
+import RSocketServer from 'rsocket-core/build/RSocketServer';
+import { MAX_STREAM_ID } from 'rsocket-core/build/RSocketFrame';
+
 import { Flowable, Single } from 'rsocket-flowable';
 
 const serverStop = (function serverSide() {
@@ -39,10 +44,10 @@ const serverStop = (function serverSide() {
   });
 
   client.connect().then(socket => {
-    pickOperation(socket, {
-      operation: 'requestResponse',
-      payload: 'requestResponse testing'
-    });
+    // pickOperation(socket, {
+    //   operation: 'requestResponse',
+    //   payload: 'requestResponse testing'
+    // });
     // serverStop();
     // client.close();
     pickOperation(socket, {
@@ -105,21 +110,23 @@ class SymmetricResponder {
 
   requestResponse(payload) {
     logRequest('requestResponse', payload);
-    return Single.error(errorFactory({ data: 'requestResponse error test' }));
+    // return Single.error(errorFactory({ data: 'requestResponse error test' }));
     // return Single.error('requestResponse error test');
 
-    // Single.of(make(`${payload.data} response`));
+    Single.of(make(`${payload.data} response`));
   }
 
   requestStream(payload) {
     logRequest('requestStream', payload);
-    return Flowable.error(errorFactory({ data: 'requestStream error test' }));
+    // const flowable = new Flowable();
+    // return flowable.onNext({ data: 'requestStream error test' })
+    // return Flowable.error(errorFactory({ data: 'requestStream error test' }));
     // return  Flowable.error(new Error('requestStream error test'));
 
-    // Flowable.just(
-    //   make(`${payload.data} stream1`),
-    //   make(`${payload.data} stream2`),
-    // );
+    Flowable.just(
+      make(`${payload.data} stream1`),
+      make(`${payload.data} stream2`),
+    );
   }
 
   requestChannel(payloads) {

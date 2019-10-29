@@ -1,7 +1,7 @@
 {
   "name": "rsocket-events-server",
   "description": "RSocket Events server for use in browser environments",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "repository": {
     "type": "git",
     "url": "https://github.com/rsocket/rsocket-js.git"
@@ -30,6 +30,8 @@
     "rollup": "^1.25.2",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-commonjs": "^10.0.1",
     "rollup-plugin-visualizer": "^2.6.0"
   }
 }

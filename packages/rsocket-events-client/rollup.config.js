@@ -2,6 +2,8 @@ import visualizer from 'rollup-plugin-visualizer';
 import flow from 'rollup-plugin-flow';
 import pkg from './package.json';
 import babel from 'rollup-plugin-babel';
+import commonjs from 'rollup-plugin-commonjs';
+import resolve from 'rollup-plugin-node-resolve';
 
 export default {
   input: 'src/index.js',
@@ -18,9 +20,11 @@ export default {
   external: [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})],
   plugins: [
     flow(),
+    resolve(),
+    commonjs(),
     babel({
       babelrc: false,
-      exclude: 'node_modules/**',
+      exclude: '/node_modules/',
       runtimeHelpers: true,
     }),
     visualizer({

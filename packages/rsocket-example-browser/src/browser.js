@@ -7,7 +7,9 @@ import RSocketClient from 'rsocket-core/build/RSocketClient';
 import RSocketServer from 'rsocket-core/build/RSocketServer';
 import { MAX_STREAM_ID } from 'rsocket-core/build/RSocketFrame';
 
-import { Flowable, Single } from 'rsocket-flowable';
+import { Flowable, Single, FlowableProcessor } from 'rsocket-flowable';
+
+
 
 const serverStop = (function serverSide() {
   const serverOptions = {
@@ -83,12 +85,13 @@ const serverStop = (function serverSide() {
   }
 })({ address: 'pm://host/path:80', debug: true });
 
+
 const observer = {
   onComplete() {
     console.log('onComplete()');
   },
   onError(error) {
-    console.log('onError(%s)', error.source.message.data);
+    console.log('onError(%s)', error.source.message);
   }
 
 };
@@ -103,6 +106,17 @@ const observerFlow = {
   }
 };
 
+const flowable = new Flowable(subscriber => {
+  subscriber.onSubscribe();
+})
+// const subject = new FlowableProcessor(flowable, (nextVal)=>nextVal);
+// const subject = new FlowableProcessor(Flowable.just(), (nextVal) => nextVal);
+const subject = new FlowableProcessor(Flowable.never(), (nextVal) => nextVal);
+
+subject.subscribe(observerFlow);
+
+subject.onNext({data: '111111'})
+
 class SymmetricResponder {
   fireAndForget(payload) {
     logRequest('fnf', payload);
@@ -113,7 +127,7 @@ class SymmetricResponder {
     // return Single.error(errorFactory({ data: 'requestResponse error test' }));
     // return Single.error('requestResponse error test');
 
-    Single.of(make(`${payload.data} response`));
+    return Single.of(make(`${payload.data} response`));
   }
 
   requestStream(payload) {
@@ -121,12 +135,15 @@ class SymmetricResponder {
     // const flowable = new Flowable();
     // return flowable.onNext({ data: 'requestStream error test' })
     // return Flowable.error(errorFactory({ data: 'requestStream error test' }));
-    // return  Flowable.error(new Error('requestStream error test'));
+    return new Flowable((subscriber) => {
+      subscriber.onSubscribe();
+      subscriber.onError({message : new Error('test')})
+    });
 
-    Flowable.just(
-      make(`${payload.data} stream1`),
-      make(`${payload.data} stream2`),
-    );
+    // return Flowable.just(
+    //   make(`${payload.data} stream1`),
+    //   make(`${payload.data} stream2`),
+    // );
   }
 
   requestChannel(payloads) {

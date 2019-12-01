@@ -64,7 +64,9 @@ export default class EventsServer {
       return;
     }
 
-    if (ev && Array.isArray(ev.ports)) {
+    if (ev && (Array.isArray(ev.ports)
+      // fix firefox < 52
+      || Object.prototype.toString.call(ev.ports) === '[object MessagePortList]')){
       this._clientChannelPort = ev.ports[0];
       this._clientChannelPort.postMessage({type: 'connect'});
 

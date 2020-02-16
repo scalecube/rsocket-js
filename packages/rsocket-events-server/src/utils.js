@@ -3,18 +3,18 @@
  * @flow
  */
 
-export const newMessage = ({type, payload}: NewMessageOptions) => ({
+export const newMessage = ({ type, payload }: NewMessageOptions) => ({
   cid: Date.now() + '-' + Math.random(),
   payload,
-  type,
+  type
 });
 
 // $FlowFixMe
-export const getMessageData = ({data}: {data?: any}): any => data || null;
+export const getMessageData = ({ data }: { data?: any }): any => data || null;
 
 export const updateListeners = (
-  {listeners = [], type, func, scope}: UpdateListenersOptions,
-) => type && func ? [...listeners, {func, type, scope}] : [...listeners];
+  { listeners = [], type, func, scope }: UpdateListenersOptions
+) => type && func ? [...listeners, { func, type, scope }] : [...listeners];
 
 export interface IEventListener {
   func: (...data: any[]) => any,
@@ -48,21 +48,25 @@ export const genericPostMessage = (data: any, transfer?: any[]) => {
       typeof WorkerGlobalScope !== 'undefined' &&
       self instanceof WorkerGlobalScope
     ) {
-      if (localAddress.indexOf(data.detail.address) > -1) {
+      if ( localAddress.indexOf(data.detail.address) > -1 ) {
         const event = new MessageEvent('message', {
           data,
-          ports: transfer ? transfer : undefined,
+          ports: transfer
         });
         dispatchEvent(event);
       } else {
         // $FlowFixMe
-        postMessage(data, transfer ? transfer : undefined);
+        postMessage(data, transfer);
       }
     } else {
-      // $FlowFixMe
-      postMessage(data, '*', transfer ? transfer : undefined);
+      if ( window.self !== window.top) {
+        // $FlowFixMe
+        window.parent && window.parent.postMessage(data, '*', transfer);
+      } else {
+        postMessage(data, '*', transfer);
+      }
     }
-  } catch (e) {
+  } catch ( e ) {
     console.error('Unable to post message ', e);
   }
 };
